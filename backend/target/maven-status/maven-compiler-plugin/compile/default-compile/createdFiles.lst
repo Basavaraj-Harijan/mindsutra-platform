@@ -1,0 +1,4 @@
+com\mindsutra\controller\WellnessController.class
+com\mindsutra\security\SecurityConfig.class
+com\mindsutra\MindSutraApplication.class
+com\mindsutra\controller\WellnessController$AiChatInput.class
