@@ -1,15 +1,28 @@
 import os
+import io
 from typing import List, Optional
 from fastapi import FastAPI, HTTPException, Request, Header
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from gtts import gTTS
 
 limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(title="MindSutra AI Wellness Guidance Microservice", version="1.0.0")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# React (localhost:3000) ನಿಂದ ನೇರವಾಗಿ ಆಡಿಯೋ ಮತ್ತು ಚಾಟ್ ಕಾಲ್ ಮಾಡಲು CORS ಅನುಮತಿ
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 INTERNAL_API_KEY = os.getenv("AI_INTERNAL_API_KEY", "")
 
@@ -28,6 +41,17 @@ class ChatRequest(BaseModel):
 @app.get("/health")
 def health_check():
     return {"status": "healthy", "service": "mindsutra-ai"}
+
+@app.get("/api/ai/tts")
+def text_to_speech(text: str, lang: str = "kn"):
+    try:
+        tts = gTTS(text=text, lang=lang)
+        fp = io.BytesIO()
+        tts.write_to_fp(fp)
+        fp.seek(0)
+        return StreamingResponse(fp, media_type="audio/mpeg")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"TTS generation failed: {str(e)}")
 
 @app.post("/api/ai/chat")
 @limiter.limit("20/minute")

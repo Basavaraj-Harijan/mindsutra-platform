@@ -40,6 +40,7 @@ const UI_TEXT = {
     heroSub: 'Multilingual AI meditation guidance, interactive breathwork, and soothing soundscapes.',
     library: 'Meditation Library',
     breath: 'Breathing Coach (4-4-6)',
+    breathNav: 'Breathing Coach',
     aiTitle: 'AI Wellness Assistant',
     journal: 'Mood Journal',
     placeholder: 'Share how you feel right now...',
@@ -50,8 +51,9 @@ const UI_TEXT = {
   kn: {
     heroTitle: 'ಶಾಂತ ಮನಸ್ಸು, ಸ್ಥಿರ ಚಿತ್ತ — ನಿಮ್ಮದೇ ಭಾಷೆಯಲ್ಲಿ.',
     heroSub: 'ಬಹುಭಾಷಾ AI ಧ್ಯಾನ ಮಾರ್ಗದರ್ಶನ, ಉಸಿರಾಟದ ಅಭ್ಯಾಸ ಮತ್ತು ಶಾಂತಿಯುತ ಅನುಭವ.',
-    library: 'ಧ್ಯಾನ ಭಂಡಾರ (Meditation Library)',
+    library: 'ಧ್ಯಾನ ಭಂಡಾರ',
     breath: 'ಉಸಿರಾಟದ ಕೋಚ್ (4-4-6)',
+    breathNav: 'ಉಸಿರಾಟದ ಕೋಚ್',
     aiTitle: 'AI ವೆಲ್‌ನೆಸ್ ಸಹಾಯಕ',
     journal: 'ಮನಸ್ಥಿತಿ ಡೈರಿ (Mood Journal)',
     placeholder: 'ನಿಮ್ಮ ಮನಸ್ಥಿತಿಯನ್ನು ಇಲ್ಲಿ ಹಂಚಿಕೊಳ್ಳಿ...',
@@ -62,8 +64,9 @@ const UI_TEXT = {
   hi: {
     heroTitle: 'शांत मन, स्थिर उपस्थिति — आपकी अपनी भाषा में।',
     heroSub: 'बहुभाषी AI ध्यान मार्गदर्शन, श्वास अभ्यास और सुखद अनुभव।',
-    library: 'ध्यान पुस्तकालय (Meditation Library)',
+    library: 'ध्यान पुस्तकालय',
     breath: 'श्वास कोच (4-4-6)',
+    breathNav: 'श्वास कोच',
     aiTitle: 'AI वेलनेस सहायक',
     journal: 'मूड जर्नल',
     placeholder: 'अभी आप कैसा महसूस कर रहे हैं...',
@@ -78,6 +81,18 @@ export default function App() {
   const [sessions, setSessions] = useState(FALLBACK_SESSIONS);
   const [activeSession, setActiveSession] = useState(null);
   const audioCtxRef = useRef(null);
+  const voiceAudioRef = useRef(null);
+
+  // Smooth Scroll References
+  const libraryRef = useRef(null);
+  const aiRef = useRef(null);
+  const breathRef = useRef(null);
+
+  const scrollToSection = (ref) => {
+    if (ref && ref.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   // Breathing Coach State
   const [isBreathing, setIsBreathing] = useState(false);
@@ -106,14 +121,16 @@ export default function App() {
       .catch(() => {});
   }, []);
 
-  // 432Hz Ambient Soundscape + Multilingual Voice Narration
+  // 432Hz Ambient Soundscape + Python gTTS Multilingual Voice Narration
   const stopAudioAndVoice = () => {
     if (audioCtxRef.current) {
       audioCtxRef.current.close().catch(() => {});
       audioCtxRef.current = null;
     }
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
+    if (voiceAudioRef.current) {
+      voiceAudioRef.current.pause();
+      voiceAudioRef.current.currentTime = 0;
+      voiceAudioRef.current = null;
     }
   };
 
@@ -136,11 +153,11 @@ export default function App() {
       const gain = ctx.createGain();
 
       osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(216, ctx.currentTime); // 432Hz octave harmonic
+      osc1.frequency.setValueAtTime(216, ctx.currentTime);
       osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(324, ctx.currentTime); // Peaceful fifth interval
+      osc2.frequency.setValueAtTime(324, ctx.currentTime);
 
-      gain.gain.setValueAtTime(0.04, ctx.currentTime); // Soft ambient volume
+      gain.gain.setValueAtTime(0.03, ctx.currentTime);
       osc1.connect(gain);
       osc2.connect(gain);
       gain.connect(ctx.destination);
@@ -152,22 +169,21 @@ export default function App() {
       console.error('AudioContext error:', e);
     }
 
-    // 2. Speak guided meditation script in session's language
-    if ('speechSynthesis' in window) {
-      const code = session.languageCode || session.language_code || 'en';
-      const script =
-        session.voiceScript ||
-        (code === 'kn'
-          ? 'ನಮಸ್ಕಾರ. ದೀರ್ಘವಾಗಿ ಉಸಿರಾಡಿ ಮತ್ತು ನಿಮ್ಮ ಮನಸ್ಸನ್ನು ಶಾಂತಗೊಳಿಸಿ.'
-          : code === 'hi'
-          ? 'नमस्ते। गहरी सांस लें और अपने मन को शांत करें।'
-          : `Welcome to ${session.title}. Close your eyes, breathe deeply, and relax.`);
+    // 2. Play guided meditation script via FastAPI gTTS (/api/ai/tts)
+    const code = session.languageCode || session.language_code || 'en';
+    const script =
+      session.voiceScript ||
+      (code === 'kn'
+        ? 'ನಮಸ್ಕಾರ. ನಿಮ್ಮ ಕಣ್ಣುಗಳನ್ನು ನಿಧಾನವಾಗಿ ಮುಚ್ಚಿ. ದೀರ್ಘವಾಗಿ ಉಸಿರನ್ನು ಒಳಗೆ ತೆಗೆದುಕೊಳ್ಳಿ, ಮತ್ತು ನಿಧಾನವಾಗಿ ಹೊರಗೆ ಬಿಡಿ. ನಿಮ್ಮ ಮನಸ್ಸು ಈಗ ಸಂಪೂರ್ಣ ಶಾಂತವಾಗಿದೆ.'
+        : code === 'hi'
+        ? 'नमस्ते। अपनी आंखें धीरे से बंद करें। गहरी सांस अंदर लें, और धीरे-धीरे बाहर छोड़ें। आपका मन शांत हो रहा है।'
+        : `Welcome to ${session.title}. Close your eyes gently, breathe deeply, and relax.`);
 
-      const utterance = new SpeechSynthesisUtterance(script);
-      utterance.lang = code === 'kn' ? 'kn-IN' : code === 'hi' ? 'hi-IN' : 'en-IN';
-      utterance.rate = 0.88; // Calm, slow pace
-      window.speechSynthesis.speak(utterance);
-    }
+    const audio = new Audio(
+      `http://127.0.0.1:8000/api/ai/tts?text=${encodeURIComponent(script)}&lang=${code}`
+    );
+    voiceAudioRef.current = audio;
+    audio.play().catch((err) => console.error('TTS playback error:', err));
   };
 
   useEffect(() => {
@@ -216,13 +232,13 @@ export default function App() {
       setMessages((prev) => [...prev, { sender: 'ASSISTANT', text: data.reply || data.response || JSON.stringify(data) }]);
     } catch {
       try {
-        const directRes = await fetch('http://127.0.0.1:8000/api/ai/guidance', {
+        const directRes = await fetch('http://127.0.0.1:8000/api/ai/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: userMsg, language: lang })
+          body: JSON.stringify({ user_message: userMsg, language: lang })
         });
         const directData = await directRes.json();
-        setMessages((prev) => [...prev, { sender: 'ASSISTANT', text: directData.reply || directData.guidance || 'Take 3 slow breaths.' }]);
+        setMessages((prev) => [...prev, { sender: 'ASSISTANT', text: directData.reply || 'Take 3 slow breaths.' }]);
       } catch {
         setMessages((prev) => [
           ...prev,
@@ -250,34 +266,136 @@ export default function App() {
     setMoodNote('');
   };
 
+  const navBtnStyle = {
+    background: 'none',
+    border: 'none',
+    color: '#1F362D',
+    fontSize: '15px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    padding: '8px 12px',
+    borderRadius: '8px',
+    transition: 'background-color 0.2s ease'
+  };
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#F6F4EF', color: '#1F362D', fontFamily: 'system-ui, sans-serif' }}>
-      <header style={{ maxWidth: '1120px', margin: '0 auto', padding: '24px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '22px', fontWeight: '700', color: '#2D5A43' }}>
-          <Leaf size={26} />
-          <span>MindSutra</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Globe size={18} color="#2D5A43" />
-          <select
-            value={lang}
-            onChange={(e) => setLang(e.target.value)}
-            style={{ padding: '8px 14px', borderRadius: '10px', border: '1px solid #C8D3CD', backgroundColor: '#FFFFFF', color: '#1F362D', fontWeight: '500', cursor: 'pointer' }}
+      {/* Sticky Navigation Bar */}
+      <header style={{ 
+        position: 'sticky', 
+        top: 0, 
+        zIndex: 100, 
+        backgroundColor: 'rgba(246, 244, 239, 0.92)', 
+        backdropFilter: 'blur(10px)', 
+        borderBottom: '1px solid #E2E7E4' 
+      }}>
+        <div style={{ maxWidth: '1120px', margin: '0 auto', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          {/* Brand Logo */}
+          <div 
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '22px', fontWeight: '700', color: '#2D5A43', cursor: 'pointer' }}
           >
-            <option value="en">English</option>
-            <option value="kn">ಕನ್ನಡ (Kannada)</option>
-            <option value="hi">हिंदी (Hindi)</option>
-          </select>
+            <Leaf size={26} />
+            <span>MindSutra</span>
+          </div>
+
+          {/* Navigation Links */}
+          <nav style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <button 
+              onClick={() => scrollToSection(libraryRef)} 
+              style={navBtnStyle}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#E3EFE8'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              {t.library}
+            </button>
+            <button 
+              onClick={() => scrollToSection(aiRef)} 
+              style={navBtnStyle}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#E3EFE8'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              {t.aiTitle}
+            </button>
+            <button 
+              onClick={() => scrollToSection(breathRef)} 
+              style={navBtnStyle}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#E3EFE8'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              {t.breathNav}
+            </button>
+          </nav>
+
+          {/* Language Selector */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Globe size={18} color="#2D5A43" />
+            <select
+              value={lang}
+              onChange={(e) => setLang(e.target.value)}
+              style={{ padding: '8px 14px', borderRadius: '10px', border: '1px solid #C8D3CD', backgroundColor: '#FFFFFF', color: '#1F362D', fontWeight: '500', cursor: 'pointer' }}
+            >
+              <option value="en">English</option>
+              <option value="kn">ಕನ್ನಡ (Kannada)</option>
+              <option value="hi">हिंदी (Hindi)</option>
+            </select>
+          </div>
         </div>
       </header>
 
-      <section style={{ textAlign: 'center', padding: '28px 20px 44px', maxWidth: '780px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '38px', fontFamily: 'Georgia, serif', marginBottom: '12px', color: '#1C3128' }}>{t.heroTitle}</h1>
-        <p style={{ fontSize: '16px', color: '#53685E', lineHeight: '1.6' }}>{t.heroSub}</p>
+      {/* 3D Buddha Hero Section */}
+      <section style={{ 
+        position: 'relative', 
+        height: '560px', 
+        backgroundImage: 'linear-gradient(to bottom, rgba(31, 54, 45, 0.25), rgba(31, 54, 45, 0.85)), url("/buddha-hero.png")', 
+        backgroundSize: 'cover', 
+        backgroundPosition: 'center 15%', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        justifyContent: 'flex-end', 
+        alignItems: 'center', 
+        textAlign: 'center', 
+        padding: '0 20px 44px',
+        color: '#FFFFFF',
+        marginBottom: '40px',
+        boxShadow: 'inset 0 0 80px rgba(0,0,0,0.4)'
+      }}>
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(to top, rgba(28, 49, 40, 0.9) 0%, rgba(28, 49, 40, 0.2) 55%, rgba(0, 0, 0, 0.15) 100%)',
+          zIndex: 1
+        }}></div>
+
+        <div style={{ position: 'relative', zIndex: 2, maxWidth: '800px' }}>
+          <h1 style={{ 
+            fontSize: '42px', 
+            fontFamily: 'Georgia, serif', 
+            marginBottom: '12px', 
+            textShadow: '2px 2px 10px rgba(0,0,0,0.85)',
+            letterSpacing: '0.5px' 
+          }}>
+            {t.heroTitle}
+          </h1>
+          <p style={{ 
+            fontSize: '17px', 
+            color: '#E3EFE8', 
+            lineHeight: '1.6', 
+            maxWidth: '650px', 
+            margin: '0 auto',
+            textShadow: '1px 1px 6px rgba(0,0,0,0.8)' 
+          }}>
+            {t.heroSub}
+          </p>
+        </div>
       </section>
 
       <main style={{ maxWidth: '1120px', margin: '0 auto', padding: '0 20px 60px', display: 'grid', gap: '28px' }}>
-        <section style={{ backgroundColor: '#FFFFFF', borderRadius: '18px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
+        {/* Meditation Library Section */}
+        <section 
+          ref={libraryRef} 
+          style={{ scrollMarginTop: '90px', backgroundColor: '#FFFFFF', borderRadius: '18px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}
+        >
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '20px', marginBottom: '18px', color: '#2D5A43' }}>
             <BookOpen size={22} /> {t.library}
           </h2>
@@ -301,7 +419,11 @@ export default function App() {
         </section>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '24px' }}>
-          <section style={{ backgroundColor: '#FFFFFF', borderRadius: '18px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' }}>
+          {/* AI Wellness Assistant Section */}
+          <section 
+            ref={aiRef} 
+            style={{ scrollMarginTop: '90px', backgroundColor: '#FFFFFF', borderRadius: '18px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' }}
+          >
             <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '20px', marginBottom: '14px', color: '#2D5A43' }}>
               <Sparkles size={22} /> {t.aiTitle}
             </h2>
@@ -340,7 +462,11 @@ export default function App() {
           </section>
 
           <div style={{ display: 'grid', gap: '24px' }}>
-            <section style={{ backgroundColor: '#FFFFFF', borderRadius: '18px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', textAlign: 'center' }}>
+            {/* Breathing Coach Section */}
+            <section 
+              ref={breathRef} 
+              style={{ scrollMarginTop: '90px', backgroundColor: '#FFFFFF', borderRadius: '18px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', textAlign: 'center' }}
+            >
               <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontSize: '20px', marginBottom: '14px', color: '#2D5A43' }}>
                 <Wind size={22} /> {t.breath}
               </h2>
@@ -355,6 +481,7 @@ export default function App() {
               </button>
             </section>
 
+            {/* Mood Journal Section */}
             <section style={{ backgroundColor: '#FFFFFF', borderRadius: '18px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
               <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '20px', marginBottom: '12px', color: '#2D5A43' }}>
                 <Heart size={22} /> {t.journal}
