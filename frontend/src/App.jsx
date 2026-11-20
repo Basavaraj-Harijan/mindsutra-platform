@@ -1,44 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Leaf, Wind, Sparkles, BookOpen, Play, Pause, Send, Globe, Heart, Volume2 } from 'lucide-react';
-
-const FALLBACK_SESSIONS = [
-  {
-    id: 1,
-    languageCode: 'en',
-    title: 'Morning Grounding & Breath',
-    description: 'A gentle 8-minute arrival into stillness with mindful awareness.',
-    voiceScript: 'Welcome to Morning Grounding. Close your eyes gently. Take a deep breath in, and let go of all tension.',
-    instructorName: 'Aarav Sharma',
-    durationSeconds: 480,
-    difficultyLevel: 'BEGINNER'
-  },
-  {
-    id: 2,
-    languageCode: 'kn',
-    title: 'ಶಾಂತ ಮನಸ್ಸು - ಒತ್ತಡ ನಿವಾರಣೆ (Calm Mind)',
-    description: 'ದೈನಂದಿನ ಒತ್ತಡವನ್ನು ಕಡಿಮೆ ಮಾಡಲು ಮಾರ್ಗದರ್ಶಿ ಧ್ಯಾನ.',
-    voiceScript: 'ನಮಸ್ಕಾರ. ನಿಮ್ಮ ಕಣ್ಣುಗಳನ್ನು ನಿಧಾನವಾಗಿ ಮುಚ್ಚಿ. ದೀರ್ಘವಾಗಿ ಉಸಿರನ್ನು ಒಳಗೆ ತೆಗೆದುಕೊಳ್ಳಿ, ಮತ್ತು ನಿಧಾನವಾಗಿ ಹೊರಗೆ ಬಿಡಿ. ನಿಮ್ಮ ಮನಸ್ಸು ಈಗ ಸಂಪೂರ್ಣ ಶಾಂತವಾಗಿದೆ.',
-    instructorName: 'Ananya Rao',
-    durationSeconds: 600,
-    difficultyLevel: 'BEGINNER'
-  },
-  {
-    id: 3,
-    languageCode: 'hi',
-    title: 'शांत श्वास और सजगता (Mindful Breath)',
-    description: 'वर्तमान क्षण में लौटने के लिए सरल और शांत ध्यान अभ्यास।',
-    voiceScript: 'नमस्ते। अपनी आंखें धीरे से बंद करें। गहरी सांस अंदर लें, और धीरे-धीरे बाहर छोड़ें। आपका मन शांत हो रहा है।',
-    instructorName: 'Meera Joshi',
-    durationSeconds: 720,
-    difficultyLevel: 'INTERMEDIATE'
-  }
-];
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  ArrowDown,
+  ArrowUpRight,
+  Globe,
+  Heart,
+  Leaf,
+  Pause,
+  Play,
+  Send,
+  Sparkles,
+  Volume2,
+  Wind,
+} from 'lucide-react';
+import './App.css';
 
 const UI_TEXT = {
   en: {
     heroTitle: 'Calm mind, rooted presence — in your language.',
-    heroSub: 'Multilingual AI meditation guidance, interactive breathwork, and soothing soundscapes.',
-    library: 'Meditation Library',
+    heroSub: '1Hz Delta Wave Binaural Drone, multilingual AI meditation guidance, and interactive breathwork.',
+    omNav: 'OM & Delta Drone',
+    omTitle: '1Hz Delta Wave & Sacred OM Synth Drone',
+    omDesc: 'Designed ambient synth drone with a 1Hz Delta Binaural Beat for deep relaxation and mental stillness.',
+    startOm: 'Start Deep Relaxation Drone',
+    stopOm: 'Stop Drone',
     breath: 'Breathing Coach (4-4-6)',
     breathNav: 'Breathing Coach',
     aiTitle: 'AI Wellness Assistant',
@@ -46,12 +30,16 @@ const UI_TEXT = {
     placeholder: 'Share how you feel right now...',
     send: 'Ask AI',
     startBreath: 'Start Breathing',
-    stopBreath: 'Stop'
+    stopBreath: 'Stop',
   },
   kn: {
     heroTitle: 'ಶಾಂತ ಮನಸ್ಸು, ಸ್ಥಿರ ಚಿತ್ತ — ನಿಮ್ಮದೇ ಭಾಷೆಯಲ್ಲಿ.',
-    heroSub: 'ಬಹುಭಾಷಾ AI ಧ್ಯಾನ ಮಾರ್ಗದರ್ಶನ, ಉಸಿರಾಟದ ಅಭ್ಯಾಸ ಮತ್ತು ಶಾಂತಿಯುತ ಅನುಭವ.',
-    library: 'ಧ್ಯಾನ ಭಂಡಾರ',
+    heroSub: '1Hz ಡೆಲ್ಟಾ ವೇವ್ ಬೈನೌರಲ್ ನಾದ, ಬಹುಭಾಷಾ AI ಧ್ಯಾನ ಮಾರ್ಗದರ್ಶನ ಮತ್ತು ಉಸಿರಾಟದ ಅಭ್ಯಾಸ.',
+    omNav: 'ಓಂ & ಡೆಲ್ಟಾ ನಾದ',
+    omTitle: '1Hz ಡೆಲ್ಟಾ ವೇವ್ & ಪವಿತ್ರ ಓಂ ಸಿಂಥ್ ಡ್ರೋನ್',
+    omDesc: 'ಆಳವಾದ ವಿಶ್ರಾಂತಿ ಮತ್ತು ಮನಸ್ಸಿನ ಶಾಂತಿಗಾಗಿ 1Hz ಡೆಲ್ಟಾ ಬೈನೌರಲ್ ಬೀಟ್ ಹೊಂದಿರುವ ವಿಶೇಷ ಆಂಬಿಯೆಂಟ್ ನಾದವನ್ನು ಆಲಿಸಿ.',
+    startOm: 'ವಿಶ್ರಾಂತಿ ನಾದ ಪ್ರಾರಂಭಿಸಿ',
+    stopOm: 'ನಿಲ್ಲಿಸಿ',
     breath: 'ಉಸಿರಾಟದ ಕೋಚ್ (4-4-6)',
     breathNav: 'ಉಸಿರಾಟದ ಕೋಚ್',
     aiTitle: 'AI ವೆಲ್‌ನೆಸ್ ಸಹಾಯಕ',
@@ -59,12 +47,16 @@ const UI_TEXT = {
     placeholder: 'ನಿಮ್ಮ ಮನಸ್ಥಿತಿಯನ್ನು ಇಲ್ಲಿ ಹಂಚಿಕೊಳ್ಳಿ...',
     send: 'ಕಳುಹಿಸಿ',
     startBreath: 'ಉಸಿರಾಟ ಪ್ರಾರಂಭಿಸಿ',
-    stopBreath: 'ನಿಲ್ಲಿಸಿ'
+    stopBreath: 'ನಿಲ್ಲಿಸಿ',
   },
   hi: {
     heroTitle: 'शांत मन, स्थिर उपस्थिति — आपकी अपनी भाषा में।',
-    heroSub: 'बहुभाषी AI ध्यान मार्गदर्शन, श्वास अभ्यास और सुखद अनुभव।',
-    library: 'ध्यान पुस्तकालय',
+    heroSub: '1Hz डेल्टा वेव बाइनॉरल ड्रोन, बहुभाषी AI ध्यान मार्गदर्शन और श्वास अभ्यास।',
+    omNav: 'ॐ & डेल्टा ड्रोन',
+    omTitle: '1Hz डेल्टा वेव & पवित्र ॐ सिंथ ड्रोन',
+    omDesc: 'गहरे विश्राम और मानसिक शांति के लिए 1Hz डेल्टा बाइनॉरल बीट के साथ विशेष एम्बिएंट ध्वनि का अनुभव करें।',
+    startOm: 'रिलैक्सेशन ड्रोन शुरू करें',
+    stopOm: 'रोकें',
     breath: 'श्वास कोच (4-4-6)',
     breathNav: 'श्वास कोच',
     aiTitle: 'AI वेलनेस सहायक',
@@ -72,151 +64,108 @@ const UI_TEXT = {
     placeholder: 'अभी आप कैसा महसूस कर रहे हैं...',
     send: 'भेजें',
     startBreath: 'अभ्यास शुरू करें',
-    stopBreath: 'रोकें'
-  }
+    stopBreath: 'रोकें',
+  },
+};
+
+const BREATH_STEPS = {
+  en: [
+    { label: 'Inhale gently', duration: 4000 },
+    { label: 'Hold softly', duration: 4000 },
+    { label: 'Exhale slowly', duration: 6000 },
+  ],
+  kn: [
+    { label: 'ನಿಧಾನವಾಗಿ ಉಸಿರೆಳೆ', duration: 4000 },
+    { label: 'ಮೃದುವಾಗಿ ಹಿಡಿದುಕೊಳ್ಳಿ', duration: 4000 },
+    { label: 'ನಿಧಾನವಾಗಿ ಉಸಿರು ಬಿಡಿ', duration: 6000 },
+  ],
+  hi: [
+    { label: 'धीरे से साँस लें', duration: 4000 },
+    { label: 'हल्के से रोकें', duration: 4000 },
+    { label: 'धीरे से साँस छोड़ें', duration: 6000 },
+  ],
+};
+
+const BREATH_LABELS = {
+  en: 'Ready',
+  kn: 'ಸಿದ್ಧ',
+  hi: 'तैयार',
 };
 
 export default function App() {
   const [lang, setLang] = useState('en');
-  const [sessions, setSessions] = useState(FALLBACK_SESSIONS);
-  const [activeSession, setActiveSession] = useState(null);
-  const audioCtxRef = useRef(null);
-  const voiceAudioRef = useRef(null);
-
-  // Smooth Scroll References
-  const libraryRef = useRef(null);
+  const [isOmPlaying, setIsOmPlaying] = useState(false);
+  const audioRef = useRef(null);
+  const chatEndRef = useRef(null);
+  const omRef = useRef(null);
   const aiRef = useRef(null);
   const breathRef = useRef(null);
 
-  const scrollToSection = (ref) => {
-    if (ref && ref.current) {
-      ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
-  // Breathing Coach State
   const [isBreathing, setIsBreathing] = useState(false);
-  const [breathPhase, setBreathPhase] = useState('Ready');
-
-  // AI Chat State
+  const [breathPhase, setBreathPhase] = useState(-1);
   const [chatInput, setChatInput] = useState('');
   const [messages, setMessages] = useState([
-    { sender: 'ASSISTANT', text: 'Namaste! How is your mind feeling today? Ask me for a guided practice in English, ಕನ್ನಡ, or हिंदी.' }
+    {
+      sender: 'ASSISTANT',
+      text: 'Namaste! How is your mind feeling today? Ask me for a guided practice in English, ಕನ್ನಡ, or हिंदी.',
+    },
   ]);
   const [loadingAi, setLoadingAi] = useState(false);
-
-  // Mood Journal State
   const [moodScore, setMoodScore] = useState(4);
   const [moodNote, setMoodNote] = useState('');
   const [journalEntries, setJournalEntries] = useState([]);
 
   const t = UI_TEXT[lang] || UI_TEXT.en;
+  const breathSteps = BREATH_STEPS[lang] || BREATH_STEPS.en;
+  const currentBreathStep = breathSteps[breathPhase];
 
-  useEffect(() => {
-    fetch('/api/v1/public/sessions')
-      .then((res) => (res.ok ? res.json() : Promise.reject()))
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) setSessions(data);
-      })
-      .catch(() => {});
-  }, []);
-
-  // 432Hz Ambient Soundscape + Python gTTS Multilingual Voice Narration
-  const stopAudioAndVoice = () => {
-    if (audioCtxRef.current) {
-      audioCtxRef.current.close().catch(() => {});
-      audioCtxRef.current = null;
-    }
-    if (voiceAudioRef.current) {
-      voiceAudioRef.current.pause();
-      voiceAudioRef.current.currentTime = 0;
-      voiceAudioRef.current = null;
-    }
+  const scrollToSection = (ref) => {
+    ref?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const toggleSessionAudio = (session) => {
-    if (activeSession?.id === session.id) {
-      stopAudioAndVoice();
-      setActiveSession(null);
+  const toggleDroneSound = () => {
+    if (!audioRef.current) return;
+    if (isOmPlaying) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsOmPlaying(false);
       return;
     }
-
-    stopAudioAndVoice();
-    setActiveSession(session);
-
-    // 1. Start soothing 432Hz harmonic drone via Web Audio API
-    try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      const ctx = new AudioContext();
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(216, ctx.currentTime);
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(324, ctx.currentTime);
-
-      gain.gain.setValueAtTime(0.03, ctx.currentTime);
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc1.start();
-      osc2.start();
-      audioCtxRef.current = ctx;
-    } catch (e) {
-      console.error('AudioContext error:', e);
-    }
-
-    // 2. Play guided meditation script via FastAPI gTTS (/api/ai/tts)
-    const code = session.languageCode || session.language_code || 'en';
-    const script =
-      session.voiceScript ||
-      (code === 'kn'
-        ? 'ನಮಸ್ಕಾರ. ನಿಮ್ಮ ಕಣ್ಣುಗಳನ್ನು ನಿಧಾನವಾಗಿ ಮುಚ್ಚಿ. ದೀರ್ಘವಾಗಿ ಉಸಿರನ್ನು ಒಳಗೆ ತೆಗೆದುಕೊಳ್ಳಿ, ಮತ್ತು ನಿಧಾನವಾಗಿ ಹೊರಗೆ ಬಿಡಿ. ನಿಮ್ಮ ಮನಸ್ಸು ಈಗ ಸಂಪೂರ್ಣ ಶಾಂತವಾಗಿದೆ.'
-        : code === 'hi'
-        ? 'नमस्ते। अपनी आंखें धीरे से बंद करें। गहरी सांस अंदर लें, और धीरे-धीरे बाहर छोड़ें। आपका मन शांत हो रहा है।'
-        : `Welcome to ${session.title}. Close your eyes gently, breathe deeply, and relax.`);
-
-    const audio = new Audio(
-      `http://127.0.0.1:8000/api/ai/tts?text=${encodeURIComponent(script)}&lang=${code}`
-    );
-    voiceAudioRef.current = audio;
-    audio.play().catch((err) => console.error('TTS playback error:', err));
+    audioRef.current
+      .play()
+      .then(() => setIsOmPlaying(true))
+      .catch((err) => console.error('Audio play error:', err));
   };
 
-  useEffect(() => {
-    return () => stopAudioAndVoice();
-  }, []);
-
-  // 4-4-6 Breathing Timer Logic
   useEffect(() => {
     if (!isBreathing) {
-      setBreathPhase('Ready');
-      return;
+      setBreathPhase(-1);
+      return undefined;
     }
+
+    let timeoutId;
     let step = 0;
-    const phases = [
-      'Inhale deeply (4s)...',
-      'Hold gently (4s)...',
-      'Exhale slowly (6s)...'
-    ];
-    setBreathPhase(phases[0]);
+    const advance = () => {
+      setBreathPhase(step);
+      timeoutId = window.setTimeout(() => {
+        step = (step + 1) % breathSteps.length;
+        advance();
+      }, breathSteps[step].duration);
+    };
+    advance();
 
-    const interval = setInterval(() => {
-      step = (step + 1) % phases.length;
-      setBreathPhase(phases[step]);
-    }, 4500);
+    return () => window.clearTimeout(timeoutId);
+  }, [isBreathing, breathSteps]);
 
-    return () => clearInterval(interval);
-  }, [isBreathing]);
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [messages, loadingAi]);
 
   const handleSendChat = async (e) => {
     e.preventDefault();
-    if (!chatInput.trim()) return;
+    if (!chatInput.trim() || loadingAi) return;
 
-    const userMsg = chatInput;
+    const userMsg = chatInput.trim();
     setMessages((prev) => [...prev, { sender: 'USER', text: userMsg }]);
     setChatInput('');
     setLoadingAi(true);
@@ -225,20 +174,27 @@ export default function App() {
       const res = await fetch('/api/v1/ai/assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMsg, language: lang, mood: String(moodScore) })
+        body: JSON.stringify({ message: userMsg, language: lang, mood: String(moodScore) }),
       });
-      if (!res.ok) throw new Error('Proxy failed');
+      if (!res.ok) throw new Error('Assistant request failed');
       const data = await res.json();
-      setMessages((prev) => [...prev, { sender: 'ASSISTANT', text: data.reply || data.response || JSON.stringify(data) }]);
+      setMessages((prev) => [
+        ...prev,
+        { sender: 'ASSISTANT', text: data.reply || data.response || JSON.stringify(data) },
+      ]);
     } catch {
       try {
         const directRes = await fetch('http://127.0.0.1:8000/api/ai/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_message: userMsg, language: lang })
+          body: JSON.stringify({ user_message: userMsg, language: lang }),
         });
+        if (!directRes.ok) throw new Error('Assistant fallback failed');
         const directData = await directRes.json();
-        setMessages((prev) => [...prev, { sender: 'ASSISTANT', text: directData.reply || 'Take 3 slow breaths.' }]);
+        setMessages((prev) => [
+          ...prev,
+          { sender: 'ASSISTANT', text: directData.reply || 'Take 3 slow breaths.' },
+        ]);
       } catch {
         setMessages((prev) => [
           ...prev,
@@ -247,8 +203,10 @@ export default function App() {
             text:
               lang === 'kn'
                 ? 'ದೀರ್ಘವಾಗಿ ಉಸಿರಾಡಿ (4 ಸೆಕೆಂಡ್ ಒಳಗೆ, 6 ಸೆಕೆಂಡ್ ಹೊರಗೆ). ನಿಮ್ಮ ಮನಸ್ಸು ಶಾಂತವಾಗುತ್ತದೆ.'
-                : 'Take three slow, deep breaths — inhale for 4 seconds, hold for 4, and exhale for 6 seconds.'
-          }
+                : lang === 'hi'
+                  ? 'तीन गहरी, धीमी साँसें लें — 4 सेकंड साँस अंदर, 4 सेकंड रोकें और 6 सेकंड में बाहर छोड़ें।'
+                  : 'Take three slow, deep breaths — inhale for 4 seconds, hold for 4, and exhale for 6 seconds.',
+          },
         ]);
       }
     } finally {
@@ -259,281 +217,236 @@ export default function App() {
   const handleSaveMood = (e) => {
     e.preventDefault();
     if (!moodNote.trim()) return;
-    setJournalEntries([
-      { id: Date.now(), score: moodScore, note: moodNote, time: new Date().toLocaleTimeString() },
-      ...journalEntries
+    setJournalEntries((prev) => [
+      {
+        id: Date.now(),
+        score: moodScore,
+        note: moodNote.trim(),
+        time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+      },
+      ...prev,
     ]);
     setMoodNote('');
   };
 
-  const navBtnStyle = {
-    background: 'none',
-    border: 'none',
-    color: '#1F362D',
-    fontSize: '15px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    padding: '8px 12px',
-    borderRadius: '8px',
-    transition: 'background-color 0.2s ease'
-  };
-
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#F6F4EF', color: '#1F362D', fontFamily: 'system-ui, sans-serif' }}>
-      {/* Sticky Navigation Bar */}
-      <header style={{ 
-        position: 'sticky', 
-        top: 0, 
-        zIndex: 100, 
-        backgroundColor: 'rgba(246, 244, 239, 0.92)', 
-        backdropFilter: 'blur(10px)', 
-        borderBottom: '1px solid #E2E7E4' 
-      }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          {/* Brand Logo */}
-          <div 
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '22px', fontWeight: '700', color: '#2D5A43', cursor: 'pointer' }}
-          >
-            <Leaf size={26} />
-            <span>MindSutra</span>
-          </div>
+    <div className="app-shell">
+      <audio ref={audioRef} src="/delta-drone.mp3" loop preload="auto" />
 
-          {/* Navigation Links */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <button 
-              onClick={() => scrollToSection(libraryRef)} 
-              style={navBtnStyle}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#E3EFE8'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              {t.library}
-            </button>
-            <button 
-              onClick={() => scrollToSection(aiRef)} 
-              style={navBtnStyle}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#E3EFE8'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              {t.aiTitle}
-            </button>
-            <button 
-              onClick={() => scrollToSection(breathRef)} 
-              style={navBtnStyle}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#E3EFE8'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              {t.breathNav}
-            </button>
+      <header className="site-header">
+        <div className="header-inner">
+          <button
+            className="brand"
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            aria-label="MindSutra home"
+          >
+            <span className="brand-mark"><Leaf size={19} strokeWidth={2.2} /></span>
+            <span>mind<span className="brand-light">sutra</span></span>
+          </button>
+
+          <nav className="main-nav" aria-label="Main navigation">
+            <button type="button" onClick={() => scrollToSection(omRef)}>{t.omNav}</button>
+            <button type="button" onClick={() => scrollToSection(aiRef)}>{t.aiTitle}</button>
+            <button type="button" onClick={() => scrollToSection(breathRef)}>{t.breathNav}</button>
           </nav>
 
-          {/* Language Selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Globe size={18} color="#2D5A43" />
-            <select
-              value={lang}
-              onChange={(e) => setLang(e.target.value)}
-              style={{ padding: '8px 14px', borderRadius: '10px', border: '1px solid #C8D3CD', backgroundColor: '#FFFFFF', color: '#1F362D', fontWeight: '500', cursor: 'pointer' }}
-            >
+          <label className="language-picker">
+            <Globe size={16} aria-hidden="true" />
+            <select value={lang} onChange={(e) => setLang(e.target.value)} aria-label="Choose language">
               <option value="en">English</option>
-              <option value="kn">ಕನ್ನಡ (Kannada)</option>
-              <option value="hi">हिंदी (Hindi)</option>
+              <option value="kn">ಕನ್ನಡ</option>
+              <option value="hi">हिंदी</option>
             </select>
-          </div>
+          </label>
         </div>
       </header>
 
-      {/* 3D Buddha Hero Section */}
-      <section style={{ 
-        position: 'relative', 
-        height: '560px', 
-        backgroundImage: 'linear-gradient(to bottom, rgba(31, 54, 45, 0.25), rgba(31, 54, 45, 0.85)), url("/buddha-hero.png")', 
-        backgroundSize: 'cover', 
-        backgroundPosition: 'center 15%', 
-        display: 'flex', 
-        flexDirection: 'column', 
-        justifyContent: 'flex-end', 
-        alignItems: 'center', 
-        textAlign: 'center', 
-        padding: '0 20px 44px',
-        color: '#FFFFFF',
-        marginBottom: '40px',
-        boxShadow: 'inset 0 0 80px rgba(0,0,0,0.4)'
-      }}>
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'linear-gradient(to top, rgba(28, 49, 40, 0.9) 0%, rgba(28, 49, 40, 0.2) 55%, rgba(0, 0, 0, 0.15) 100%)',
-          zIndex: 1
-        }}></div>
-
-        <div style={{ position: 'relative', zIndex: 2, maxWidth: '800px' }}>
-          <h1 style={{ 
-            fontSize: '42px', 
-            fontFamily: 'Georgia, serif', 
-            marginBottom: '12px', 
-            textShadow: '2px 2px 10px rgba(0,0,0,0.85)',
-            letterSpacing: '0.5px' 
-          }}>
-            {t.heroTitle}
-          </h1>
-          <p style={{ 
-            fontSize: '17px', 
-            color: '#E3EFE8', 
-            lineHeight: '1.6', 
-            maxWidth: '650px', 
-            margin: '0 auto',
-            textShadow: '1px 1px 6px rgba(0,0,0,0.8)' 
-          }}>
-            {t.heroSub}
-          </p>
+      <section
+        className="hero"
+        aria-labelledby="hero-title"
+        style={{ backgroundImage: 'url("/buddha-hero.png")' }}
+      >
+        <div className="hero-shade" />
+        <div className="hero-content">
+          <p className="hero-kicker"><span className="kicker-line" /> A LITTLE SPACE TO BREATHE</p>
+          <h1 id="hero-title">{t.heroTitle}</h1>
+          <p className="hero-copy">{t.heroSub}</p>
+          <button className="hero-link" type="button" onClick={() => scrollToSection(omRef)}>
+            Find your stillness <ArrowDown size={16} />
+          </button>
         </div>
+        <span className="hero-index" aria-hidden="true">01 <i /> MINDSUTRA</span>
       </section>
 
-      <main style={{ maxWidth: '1120px', margin: '0 auto', padding: '0 20px 60px', display: 'grid', gap: '28px' }}>
-        {/* Meditation Library Section */}
-        <section 
-          ref={libraryRef} 
-          style={{ scrollMarginTop: '90px', backgroundColor: '#FFFFFF', borderRadius: '18px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}
-        >
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '20px', marginBottom: '18px', color: '#2D5A43' }}>
-            <BookOpen size={22} /> {t.library}
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
-            {sessions.map((s) => (
-              <div key={s.id} style={{ border: '1px solid #E3E8E5', borderRadius: '14px', padding: '18px', backgroundColor: '#FAF9F6' }}>
-                <span style={{ fontSize: '12px', fontWeight: '600', padding: '4px 10px', borderRadius: '20px', backgroundColor: '#E3EFE8', color: '#2D5A43' }}>
-                  {(s.languageCode || s.language_code || 'EN').toUpperCase()} • {Math.round((s.durationSeconds || s.duration_seconds || 480) / 60)} min
-                </span>
-                <h3 style={{ fontSize: '17px', margin: '12px 0 6px' }}>{s.title}</h3>
-                <p style={{ fontSize: '14px', color: '#5C6F66', marginBottom: '14px' }}>{s.description}</p>
-                <button
-                  onClick={() => toggleSessionAudio(s)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '10px', border: 'none', backgroundColor: activeSession?.id === s.id ? '#B84A39' : '#2D5A43', color: '#FFFFFF', cursor: 'pointer', fontWeight: '500' }}
-                >
-                  {activeSession?.id === s.id ? <><Pause size={16} /> <Volume2 size={16} /> Stop Audio</> : <><Play size={16} /> Start Session</>}
-                </button>
-              </div>
-            ))}
+      <main className="content-wrap">
+        <section ref={omRef} className={`sound-card${isOmPlaying ? ' is-playing' : ''}`} aria-labelledby="sound-title">
+          <div className="sound-orbit" aria-hidden="true">
+            <span className="orbit orbit-one" />
+            <span className="orbit orbit-two" />
+            <span className="om-symbol">ॐ</span>
+          </div>
+          <div className="sound-content">
+            <p className="section-kicker light-kicker"><span /> THE SOUND SANCTUARY</p>
+            <h2 id="sound-title">{t.omTitle}</h2>
+            <p className="sound-description">{t.omDesc}</p>
+            <div className="sound-meta" aria-label="Audio features">
+              <span>1Hz Delta waves</span><span>Binaural beat</span><span>Ambient drone</span>
+            </div>
+            <button className={`button button-gold${isOmPlaying ? ' button-stop' : ''}`} type="button" onClick={toggleDroneSound}>
+              {isOmPlaying ? <Pause size={17} fill="currentColor" /> : <Play size={17} fill="currentColor" />}
+              {isOmPlaying ? t.stopOm : t.startOm}
+              {isOmPlaying && <Volume2 size={16} />}
+            </button>
+          </div>
+          <div className="sound-status" aria-live="polite">
+            <span className={`status-dot${isOmPlaying ? ' status-active' : ''}`} />
+            {isOmPlaying ? 'NOW PLAYING' : 'A MOMENT OF CALM'}
           </div>
         </section>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '24px' }}>
-          {/* AI Wellness Assistant Section */}
-          <section 
-            ref={aiRef} 
-            style={{ scrollMarginTop: '90px', backgroundColor: '#FFFFFF', borderRadius: '18px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' }}
-          >
-            <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '20px', marginBottom: '14px', color: '#2D5A43' }}>
-              <Sparkles size={22} /> {t.aiTitle}
-            </h2>
-            <div style={{ flex: 1, minHeight: '220px', maxHeight: '280px', overflowY: 'auto', padding: '12px', backgroundColor: '#FAF9F6', borderRadius: '12px', marginBottom: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {messages.map((m, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    alignSelf: m.sender === 'USER' ? 'flex-end' : 'flex-start',
-                    backgroundColor: m.sender === 'USER' ? '#2D5A43' : '#E6EFEA',
-                    color: m.sender === 'USER' ? '#FFFFFF' : '#1F362D',
-                    padding: '10px 14px',
-                    borderRadius: '12px',
-                    maxWidth: '82%',
-                    fontSize: '14px',
-                    lineHeight: '1.5'
-                  }}
-                >
-                  {m.text}
+        <div className="section-heading">
+          <div>
+            <p className="section-kicker"><span /> YOUR DAILY RITUAL</p>
+            <h2>Small practices, softer days.</h2>
+          </div>
+          <p className="section-note">A few gentle tools to help you check in with yourself.</p>
+        </div>
+
+        <div className="practice-grid">
+          <section ref={aiRef} className="panel assistant-panel" aria-labelledby="assistant-title">
+            <div className="panel-heading">
+              <span className="icon-well icon-lilac"><Sparkles size={19} /></span>
+              <div>
+                <p className="panel-overline">HERE WITH YOU</p>
+                <h3 id="assistant-title">{t.aiTitle}</h3>
+              </div>
+              <span className="online-indicator" title="Assistant ready" />
+            </div>
+
+            <div className="chat-window" role="log" aria-live="polite" aria-label="Conversation">
+              {messages.map((message, index) => (
+                <div key={`${message.sender}-${index}`} className={`message-row ${message.sender === 'USER' ? 'message-row-user' : ''}`}>
+                  {message.sender !== 'USER' && <span className="assistant-avatar"><Sparkles size={13} /></span>}
+                  <div className={`chat-bubble ${message.sender === 'USER' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
+                    {message.text}
+                  </div>
                 </div>
               ))}
-              {loadingAi && <div style={{ fontSize: '13px', color: '#687C73' }}>AI is reflecting...</div>}
+              {loadingAi && <div className="typing-indicator"><span /><span /><span /> <span className="typing-copy">A moment of thought…</span></div>}
+              <div ref={chatEndRef} />
             </div>
-            <form onSubmit={handleSendChat} style={{ display: 'flex', gap: '8px' }}>
+
+            <form className="chat-form" onSubmit={handleSendChat}>
               <input
                 type="text"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 placeholder={t.placeholder}
-                style={{ flex: 1, padding: '10px 14px', borderRadius: '10px', border: '1px solid #C8D3CD', fontSize: '14px' }}
+                aria-label={t.placeholder}
+                disabled={loadingAi}
               />
-              <button type="submit" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '10px 16px', borderRadius: '10px', border: 'none', backgroundColor: '#2D5A43', color: '#FFFFFF', cursor: 'pointer' }}>
-                <Send size={16} /> {t.send}
+              <button className="send-button" type="submit" aria-label={t.send} disabled={!chatInput.trim() || loadingAi}>
+                <Send size={17} />
               </button>
             </form>
+            <p className="panel-footnote">A gentle companion for reflection, not a substitute for professional care.</p>
           </section>
 
-          <div style={{ display: 'grid', gap: '24px' }}>
-            {/* Breathing Coach Section */}
-            <section 
-              ref={breathRef} 
-              style={{ scrollMarginTop: '90px', backgroundColor: '#FFFFFF', borderRadius: '18px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', textAlign: 'center' }}
-            >
-              <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontSize: '20px', marginBottom: '14px', color: '#2D5A43' }}>
-                <Wind size={22} /> {t.breath}
-              </h2>
-              <div style={{ width: '130px', height: '130px', margin: '14px auto', borderRadius: '50%', backgroundColor: isBreathing ? '#D4E8DD' : '#F0F4F2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', color: '#2D5A43', padding: '12px', transition: 'all 0.6s ease' }}>
-                {breathPhase}
+          <div className="side-stack">
+            <section ref={breathRef} className="panel breath-panel" aria-labelledby="breath-title">
+              <div className="panel-heading compact-heading">
+                <span className="icon-well icon-sage"><Wind size={19} /></span>
+                <div>
+                  <p className="panel-overline">RETURN TO YOUR BREATH</p>
+                  <h3 id="breath-title">{t.breath}</h3>
+                </div>
               </div>
-              <button
-                onClick={() => setIsBreathing(!isBreathing)}
-                style={{ padding: '10px 22px', borderRadius: '10px', border: 'none', backgroundColor: isBreathing ? '#B84A39' : '#2D5A43', color: '#FFFFFF', cursor: 'pointer', fontWeight: '500' }}
-              >
-                {isBreathing ? t.stopBreath : t.startBreath}
-              </button>
+              <div className={`breath-stage${isBreathing ? ' breath-active' : ''} ${currentBreathStep ? `breath-phase-${breathPhase}` : ''}`}>
+                <div className="breath-ring breath-ring-outer" />
+                <div className="breath-ring breath-ring-inner" />
+                <div
+                  className="breath-orb"
+                  style={{ '--phase-duration': `${currentBreathStep?.duration || 700}ms` }}
+                  aria-live="polite"
+                >
+                  <span className="breath-count">{currentBreathStep ? `${currentBreathStep.duration / 1000}s` : '4 · 4 · 6'}</span>
+                  <span className="breath-instruction">{currentBreathStep?.label || BREATH_LABELS[lang]}</span>
+                </div>
+              </div>
+              <div className="breath-bottom">
+                <p>Inhale 4 <i /> Hold 4 <i /> Exhale 6</p>
+                <button
+                  className={`button ${isBreathing ? 'button-outline-stop' : 'button-forest'}`}
+                  type="button"
+                  onClick={() => setIsBreathing((active) => !active)}
+                >
+                  {isBreathing ? t.stopBreath : t.startBreath}
+                </button>
+              </div>
             </section>
 
-            {/* Mood Journal Section */}
-            <section style={{ backgroundColor: '#FFFFFF', borderRadius: '18px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
-              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '20px', marginBottom: '12px', color: '#2D5A43' }}>
-                <Heart size={22} /> {t.journal}
-              </h2>
-              <form onSubmit={handleSaveMood} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '14px' }}>
-                  <span>Mood (1-5):</span>
-                  {[1, 2, 3, 4, 5].map((num) => (
-                    <button
-                      type="button"
-                      key={num}
-                      onClick={() => setMoodScore(num)}
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '8px',
-                        border: '1px solid #2D5A43',
-                        backgroundColor: moodScore === num ? '#2D5A43' : '#FFFFFF',
-                        color: moodScore === num ? '#FFFFFF' : '#2D5A43',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {num}
-                    </button>
-                  ))}
+            <section className="panel journal-panel" aria-labelledby="journal-title">
+              <div className="panel-heading compact-heading">
+                <span className="icon-well icon-rose"><Heart size={19} /></span>
+                <div>
+                  <p className="panel-overline">NOTICE HOW YOU FEEL</p>
+                  <h3 id="journal-title">{t.journal}</h3>
                 </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
+              </div>
+              <form className="journal-form" onSubmit={handleSaveMood}>
+                <div className="mood-picker">
+                  <span className="form-label">Mood today</span>
+                  <div className="mood-options" role="group" aria-label="Select mood from 1 to 5">
+                    {[1, 2, 3, 4, 5].map((num) => (
+                      <button
+                        type="button"
+                        key={num}
+                        onClick={() => setMoodScore(num)}
+                        className={`mood-choice${moodScore === num ? ' mood-selected' : ''}`}
+                        aria-pressed={moodScore === num}
+                        aria-label={`Mood ${num} out of 5`}
+                      >{num}</button>
+                    ))}
+                  </div>
+                </div>
+                <div className="journal-input-row">
                   <input
                     type="text"
                     value={moodNote}
                     onChange={(e) => setMoodNote(e.target.value)}
-                    placeholder="Write a quick reflection..."
-                    style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: '1px solid #C8D3CD', fontSize: '14px' }}
+                    placeholder="Write a quick reflection…"
+                    aria-label="Write a quick reflection"
                   />
-                  <button type="submit" style={{ padding: '10px 16px', borderRadius: '10px', border: 'none', backgroundColor: '#2D5A43', color: '#FFFFFF', cursor: 'pointer' }}>
-                    Save
+                  <button className="save-button" type="submit" disabled={!moodNote.trim()}>
+                    Save <ArrowUpRight size={15} />
                   </button>
                 </div>
               </form>
-              {journalEntries.length > 0 && (
-                <div style={{ marginTop: '12px', fontSize: '13px', color: '#4A5D54' }}>
+              {journalEntries.length > 0 ? (
+                <div className="journal-entries" aria-live="polite">
                   {journalEntries.slice(0, 2).map((entry) => (
-                    <div key={entry.id} style={{ padding: '6px 0', borderTop: '1px solid #EEF2F0' }}>
-                      <strong>Mood {entry.score}/5</strong> ({entry.time}): {entry.note}
+                    <div key={entry.id} className="journal-entry">
+                      <span className="entry-score">{entry.score}<small>/5</small></span>
+                      <div className="entry-copy"><p>{entry.note}</p><time>{entry.time}</time></div>
                     </div>
                   ))}
                 </div>
+              ) : (
+                <p className="journal-prompt">Your reflections will find a home here.</p>
               )}
             </section>
           </div>
         </div>
       </main>
+
+      <footer className="site-footer">
+        <a className="footer-brand" href="#top" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+          <Leaf size={15} /> mindsutra
+        </a>
+        <span>A quieter moment, whenever you need one.</span>
+        <span className="footer-mark">MADE FOR THE MOMENT <i>·</i> INDIA</span>
+      </footer>
     </div>
   );
 }
