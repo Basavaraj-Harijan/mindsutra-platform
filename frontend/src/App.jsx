@@ -40,6 +40,10 @@ const UI_TEXT = {
     startBreath: 'Start Breathing',
     stopBreath: 'Stop',
     backHome: 'Back to Home',
+    graphInhale: 'Inhale',
+    graphHold: 'Hold',
+    graphExhale: 'Exhale',
+    cyclesCompleted: 'Cycles',
   },
   kn: {
     heroTitle: 'ಶಾಂತ ಮನಸ್ಸು, ಸ್ಥಿರ ಚಿತ್ತ — ನಿಮ್ಮದೇ ಭಾಷೆಯಲ್ಲಿ.',
@@ -64,6 +68,10 @@ const UI_TEXT = {
     startBreath: 'ಉಸಿರಾಟ ಪ್ರಾರಂಭಿಸಿ',
     stopBreath: 'ನಿಲ್ಲಿಸಿ',
     backHome: 'ಹೋಮ್‌ಗೆ ಹಿಂತಿರುಗಿ',
+    graphInhale: 'ಉಸಿರೆಳೆ (4s)',
+    graphHold: 'ಹಿಡಿದಿಡಿ (4s)',
+    graphExhale: 'ಉಸಿರು ಬಿಡಿ (6s)',
+    cyclesCompleted: 'ಚಕ್ರಗಳು',
   },
   hi: {
     heroTitle: 'शांत मन, स्थिर उपस्थिति — आपकी अपनी भाषा में।',
@@ -88,6 +96,10 @@ const UI_TEXT = {
     startBreath: 'अभ्यास शुरू करें',
     stopBreath: 'रोकें',
     backHome: 'होम पर वापस जाएं',
+    graphInhale: 'साँस लें (4s)',
+    graphHold: 'रोकें (4s)',
+    graphExhale: 'साँस छोड़ें (6s)',
+    cyclesCompleted: 'चक्र',
   },
 };
 
@@ -373,6 +385,8 @@ const BREATH_LABELS = {
   hi: 'तैयार',
 };
 
+const TOTAL_CYCLE_MS = 14000; // 4s Inhale + 4s Hold + 6s Exhale
+
 function formatTime(totalSeconds) {
   const mins = Math.floor(totalSeconds / 60);
   const secs = totalSeconds % 60;
@@ -392,9 +406,13 @@ export default function App() {
   const [candleDurationMins, setCandleDurationMins] = useState(10);
   const [candleSecondsLeft, setCandleSecondsLeft] = useState(10 * 60);
 
-  // Breathing Coach State
+  // Breathing Coach + Timer + Live Graph State
   const [isBreathing, setIsBreathing] = useState(false);
   const [breathPhase, setBreathPhase] = useState(-1);
+  const [cycleElapsedMs, setCycleElapsedMs] = useState(0);
+  const [breathCycles, setBreathCycles] = useState(0);
+  const [breathDurationMins, setBreathDurationMins] = useState(5);
+  const [breathSecondsLeft, setBreathSecondsLeft] = useState(5 * 60);
 
   const t = UI_TEXT[lang] || UI_TEXT.en;
   const article = MEDITATION_CONTENT[lang] || MEDITATION_CONTENT.en;
@@ -478,25 +496,81 @@ export default function App() {
     setIsCandleLit(true);
   };
 
+  // Breathing Countdown Timer (Auto-stops when timer hits 00:00)
+  useEffect(() => {
+    if (!isBreathing) return undefined;
+
+    const timerId = window.setInterval(() => {
+      setBreathSecondsLeft((prev) => {
+        if (prev <= 1) {
+          setIsBreathing(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(timerId);
+  }, [isBreathing]);
+
+  const selectBreathMinutes = (mins) => {
+    setIsBreathing(false);
+    setBreathDurationMins(mins);
+    setBreathSecondsLeft(mins * 60);
+    setBreathCycles(0);
+    setCycleElapsedMs(0);
+    setBreathPhase(-1);
+  };
+
+  // Smooth Real-Time 60fps Breathing Loop for Orb + Wave Graph
   useEffect(() => {
     if (!isBreathing) {
       setBreathPhase(-1);
+      setCycleElapsedMs(0);
       return undefined;
     }
 
-    let timeoutId;
-    let step = 0;
-    const advance = () => {
-      setBreathPhase(step);
-      timeoutId = window.setTimeout(() => {
-        step = (step + 1) % breathSteps.length;
-        advance();
-      }, breathSteps[step].duration);
-    };
-    advance();
+    let rafId;
+    const startTime = performance.now();
 
-    return () => window.clearTimeout(timeoutId);
-  }, [isBreathing, breathSteps]);
+    const tick = (now) => {
+      const totalElapsed = now - startTime;
+      const completed = Math.floor(totalElapsed / TOTAL_CYCLE_MS);
+      const inCycle = totalElapsed % TOTAL_CYCLE_MS;
+
+      setBreathCycles(completed);
+      setCycleElapsedMs(inCycle);
+
+      if (inCycle < 4000) {
+        setBreathPhase(0); // Inhale: rises
+      } else if (inCycle < 8000) {
+        setBreathPhase(1); // Hold: constant flat
+      } else {
+        setBreathPhase(2); // Exhale: goes down
+      }
+
+      rafId = window.requestAnimationFrame(tick);
+    };
+
+    rafId = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(rafId);
+  }, [isBreathing]);
+
+  const getGraphPoint = () => {
+    if (!isBreathing) return { x: 20, y: 105 };
+    if (cycleElapsedMs < 4000) {
+      const p = cycleElapsedMs / 4000;
+      return { x: 20 + p * 114, y: 105 - p * 81 };
+    }
+    if (cycleElapsedMs < 8000) {
+      const p = (cycleElapsedMs - 4000) / 4000;
+      return { x: 134 + p * 114, y: 24 };
+    }
+    const p = (cycleElapsedMs - 8000) / 6000;
+    return { x: 248 + p * 152, y: 24 + p * 81 };
+  };
+
+  const graphPoint = getGraphPoint();
 
   return (
     <div className={`app-shell${activeView !== 'all' ? ' is-fullscreen-mode' : ''}`}>
@@ -697,7 +771,6 @@ export default function App() {
                 <p>{t.candleDesc}</p>
               </div>
 
-              {/* Realistic Burning Candle Visual */}
               <div className="candle-stage" aria-hidden="true">
                 <div className="flame-halo" />
                 <div className="flame-assembly">
@@ -715,7 +788,6 @@ export default function App() {
                 <div className="candle-holder" />
               </div>
 
-              {/* Timer & Candle Controls */}
               <div className="candle-controls">
                 <div className="candle-presets" role="group" aria-label="Candle meditation duration">
                   {[5, 10, 15].map((mins) => (
@@ -765,6 +837,7 @@ export default function App() {
             </section>
           )}
 
+          {/* FULLSCREEN BREATHING COACH + TIMER + LIVE RHYTHM GRAPH */}
           {activeView === 'breath' && (
             <div className="fullscreen-breath-wrapper">
               <section className="panel breath-panel section-fullscreen" aria-labelledby="breath-title">
@@ -774,28 +847,157 @@ export default function App() {
                     <p className="panel-overline">RETURN TO YOUR BREATH</p>
                     <h3 id="breath-title">{t.breath}</h3>
                   </div>
-                </div>
-                <div className={`breath-stage${isBreathing ? ' breath-active' : ''} ${currentBreathStep ? `breath-phase-${breathPhase}` : ''}`}>
-                  <div className="breath-ring breath-ring-outer" />
-                  <div className="breath-ring breath-ring-inner" />
-                  <div
-                    className="breath-orb"
-                    style={{ '--phase-duration': `${currentBreathStep?.duration || 700}ms` }}
-                    aria-live="polite"
-                  >
-                    <span className="breath-count">{currentBreathStep ? `${currentBreathStep.duration / 1000}s` : '4 · 4 · 6'}</span>
-                    <span className="breath-instruction">{currentBreathStep?.label || BREATH_LABELS[lang]}</span>
+
+                  <div className="breath-header-right">
+                    <span className="cycle-badge">
+                      {t.cyclesCompleted}: {breathCycles}
+                    </span>
+                    <span className="breath-timer-badge">
+                      <Clock size={13} /> {formatTime(breathSecondsLeft)}
+                    </span>
                   </div>
                 </div>
-                <div className="breath-bottom">
-                  <p>Inhale 4 <i /> Hold 4 <i /> Exhale 6</p>
-                  <button
-                    className={`button ${isBreathing ? 'button-outline-stop' : 'button-forest'}`}
-                    type="button"
-                    onClick={() => setIsBreathing((active) => !active)}
-                  >
-                    {isBreathing ? t.stopBreath : t.startBreath}
-                  </button>
+
+                <div className="breath-visual-grid">
+                  {/* Left: Breathing Orb */}
+                  <div className={`breath-stage${isBreathing ? ' breath-active' : ''} ${currentBreathStep ? `breath-phase-${breathPhase}` : ''}`}>
+                    <div className="breath-ring breath-ring-outer" />
+                    <div className="breath-ring breath-ring-inner" />
+                    <div
+                      className="breath-orb"
+                      style={{ '--phase-duration': `${currentBreathStep?.duration || 700}ms` }}
+                      aria-live="polite"
+                    >
+                      <span className="breath-count">{currentBreathStep ? `${currentBreathStep.duration / 1000}s` : '4 · 4 · 6'}</span>
+                      <span className="breath-instruction">{currentBreathStep?.label || BREATH_LABELS[lang]}</span>
+                    </div>
+                  </div>
+
+                  {/* Right: Live Breath Wave Graph (Inhale Up -> Hold Flat -> Exhale Down) */}
+                  <div className="breath-graph-card" aria-label="Breathing rhythm graph">
+                    <div className="breath-graph-head">
+                      <span>BREATH RHYTHM GRAPH</span>
+                      <span className={`graph-phase-pill phase-${breathPhase}`}>
+                        {currentBreathStep ? currentBreathStep.label : BREATH_LABELS[lang]}
+                      </span>
+                    </div>
+
+                    <svg className="breath-svg" viewBox="0 0 420 135" role="img" aria-label="Inhale up, hold flat, exhale down wave graph">
+                      <defs>
+                        <linearGradient id="breathAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#244b39" stopOpacity="0.24" />
+                          <stop offset="100%" stopColor="#244b39" stopOpacity="0.01" />
+                        </linearGradient>
+                      </defs>
+
+                      <line x1="20" y1="24" x2="400" y2="24" stroke="#e4e8df" strokeDasharray="4 4" />
+                      <line x1="20" y1="65" x2="400" y2="65" stroke="#eef1ea" strokeDasharray="3 3" />
+                      <line x1="20" y1="105" x2="400" y2="105" stroke="#e4e8df" />
+
+                      <line x1="134" y1="18" x2="134" y2="112" stroke="#edf0e8" />
+                      <line x1="248" y1="18" x2="248" y2="112" stroke="#edf0e8" />
+
+                      <polygon
+                        points="20,105 134,24 248,24 400,105"
+                        fill="url(#breathAreaGrad)"
+                      />
+
+                      <polyline
+                        points="20,105 134,24 248,24 400,105"
+                        fill="none"
+                        stroke="#b9c9b7"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+
+                      {isBreathing && (
+                        <polyline
+                          points={
+                            breathPhase === 0
+                              ? `20,105 ${graphPoint.x},${graphPoint.y}`
+                              : breathPhase === 1
+                                ? `20,105 134,24 ${graphPoint.x},${graphPoint.y}`
+                                : `20,105 134,24 248,24 ${graphPoint.x},${graphPoint.y}`
+                          }
+                          fill="none"
+                          stroke="#244b39"
+                          strokeWidth="4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      )}
+
+                      <circle
+                        cx={graphPoint.x}
+                        cy={graphPoint.y}
+                        r="9"
+                        fill="#244b39"
+                        fillOpacity="0.18"
+                      />
+                      <circle
+                        cx={graphPoint.x}
+                        cy={graphPoint.y}
+                        r="5"
+                        fill="#244b39"
+                        stroke="#ffffff"
+                        strokeWidth="2"
+                      />
+
+                      <text x="77" y="125" textAnchor="middle" className={`svg-label${breathPhase === 0 ? ' active' : ''}`}>
+                        ↑ {t.graphInhale}
+                      </text>
+                      <text x="191" y="125" textAnchor="middle" className={`svg-label${breathPhase === 1 ? ' active' : ''}`}>
+                        → {t.graphHold}
+                      </text>
+                      <text x="324" y="125" textAnchor="middle" className={`svg-label${breathPhase === 2 ? ' active' : ''}`}>
+                        ↓ {t.graphExhale}
+                      </text>
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Timer Duration Presets + Start / Stop / Reset Controls */}
+                <div className="breath-controls-bar">
+                  <div className="breath-presets" role="group" aria-label="Breathing session duration">
+                    {[2, 5, 10].map((mins) => (
+                      <button
+                        key={mins}
+                        type="button"
+                        className={breathDurationMins === mins ? 'breath-preset-active' : ''}
+                        onClick={() => selectBreathMinutes(mins)}
+                      >
+                        {mins} min
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="breath-bottom">
+                    <p>Inhale 4 <i /> Hold 4 <i /> Exhale 6</p>
+                    <div className="breath-action-group">
+                      <button
+                        className={`button ${isBreathing ? 'button-outline-stop' : 'button-forest'}`}
+                        type="button"
+                        onClick={() => {
+                          if (!isBreathing && breathSecondsLeft === 0) {
+                            setBreathSecondsLeft(breathDurationMins * 60);
+                          }
+                          setIsBreathing((active) => !active);
+                        }}
+                      >
+                        {isBreathing ? t.stopBreath : t.startBreath}
+                      </button>
+                      <button
+                        type="button"
+                        className="breath-reset-btn"
+                        onClick={() => selectBreathMinutes(breathDurationMins)}
+                        aria-label={t.resetTimerBtn}
+                        title={t.resetTimerBtn}
+                      >
+                        <RotateCcw size={15} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </section>
             </div>
