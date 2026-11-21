@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   ArrowDown,
   ArrowLeft,
+  Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Flame,
   Globe,
@@ -15,6 +18,15 @@ import {
 import './App.css';
 
 const THIRTY_MINUTES_SECONDS = 30 * 60;
+const STORAGE_KEY = 'mindsutra_consistency_log_v1';
+
+// Activity levels: 0 = None, 1 = Sound (Basic Green), 2 = Candle (Medium Green), 3 = Breath (Dark Green)
+const LEVEL_PRIORITY = {
+  none: 0,
+  sound: 1,
+  candle: 2,
+  breath: 3,
+};
 
 const UI_TEXT = {
   en: {
@@ -39,6 +51,17 @@ const UI_TEXT = {
     breathNav: 'Breathing Coach',
     startBreath: 'Start Breathing',
     stopBreath: 'Stop',
+    calendarNav: 'Calendar',
+    calendarOverline: 'DAILY CONSISTENCY TRACKER',
+    calendarTitle: 'Mindfulness Practice Calendar',
+    calendarDesc: 'Every day you practice Sound, Candle Focus, or Breathwork fills your daily square. Show up gently, one day at a time.',
+    legendSound: 'Sound Only (Basic Green)',
+    legendCandle: 'Candle Focus (Medium Green)',
+    legendBreath: 'Breathing Coach (Dark Green)',
+    legendNone: 'No Practice',
+    activeDaysLabel: 'Active Days',
+    currentStreakLabel: 'Current Streak',
+    daysUnit: 'days',
     backHome: 'Back to Home',
     graphInhale: 'Inhale',
     graphHold: 'Hold',
@@ -67,6 +90,17 @@ const UI_TEXT = {
     breathNav: 'ಉಸಿರಾಟದ ಕೋಚ್',
     startBreath: 'ಉಸಿರಾಟ ಪ್ರಾರಂಭಿಸಿ',
     stopBreath: 'ನಿಲ್ಲಿಸಿ',
+    calendarNav: 'ಕ್ಯಾಲೆಂಡರ್',
+    calendarOverline: 'ದೈನಂದಿನ ನಿರಂತರತೆಯ ಟ್ರ್ಯಾಕರ್',
+    calendarTitle: 'ಧ್ಯಾನದ ನಿರಂತರತೆ ಕ್ಯಾಲೆಂಡರ್',
+    calendarDesc: 'ನೀವು ಓಂ ನಾದ, ದೀಪ ಧ್ಯಾನ ಅಥವಾ ಉಸಿರಾಟದ ಅಭ್ಯಾಸ ಮಾಡಿದ ಪ್ರತಿದಿನವೂ ಕ್ಯಾಲೆಂಡರ್ ಚೌಕ ಹಸಿರು ಬಣ್ಣದಿಂದ ತುಂಬುತ್ತದೆ.',
+    legendSound: 'ಓಂ ನಾದ ಮಾತ್ರ (ತಿಳಿ ಹಸಿರು)',
+    legendCandle: 'ದೀಪ ಧ್ಯಾನ (ಮಧ್ಯಮ ಹಸಿರು)',
+    legendBreath: 'ಉಸಿರಾಟದ ಕೋಚ್ (ಗಾಢ ಹಸಿರು)',
+    legendNone: 'ಅಭ್ಯಾಸವಿಲ್ಲ',
+    activeDaysLabel: 'ಒಟ್ಟು ಅಭ್ಯಾಸದ ದಿನಗಳು',
+    currentStreakLabel: 'ನಿರಂತರ ಸ್ಟ್ರೀಕ್',
+    daysUnit: 'ದಿನಗಳು',
     backHome: 'ಹೋಮ್‌ಗೆ ಹಿಂತಿರುಗಿ',
     graphInhale: 'ಉಸಿರೆಳೆ (4s)',
     graphHold: 'ಹಿಡಿದಿಡಿ (4s)',
@@ -95,6 +129,17 @@ const UI_TEXT = {
     breathNav: 'श्वास कोच',
     startBreath: 'अभ्यास शुरू करें',
     stopBreath: 'रोकें',
+    calendarNav: 'कैलेंडर',
+    calendarOverline: 'दैनिक निरंतरता ट्रैकर',
+    calendarTitle: 'दैनिक ध्यान कैलेंडर',
+    calendarDesc: 'जिस दिन आप ध्वनि, दीप ध्यान या श्वास अभ्यास करते हैं, उस दिन का बॉक्स हरे रंग से भर जाता है।',
+    legendSound: 'केवल ध्वनि (हल्का हरा)',
+    legendCandle: 'दीप ध्यान (मध्यम हरा)',
+    legendBreath: 'श्वास कोच (गहरा हरा)',
+    legendNone: 'कोई अभ्यास नहीं',
+    activeDaysLabel: 'सक्रिय दिन',
+    currentStreakLabel: 'वर्तमान स्ट्रीक',
+    daysUnit: 'दिन',
     backHome: 'होम पर वापस जाएं',
     graphInhale: 'साँस लें (4s)',
     graphHold: 'रोकें (4s)',
@@ -385,7 +430,14 @@ const BREATH_LABELS = {
   hi: 'तैयार',
 };
 
-const TOTAL_CYCLE_MS = 14000; // 4s Inhale + 4s Hold + 6s Exhale
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+const TOTAL_CYCLE_MS = 14000;
 
 function formatTime(totalSeconds) {
   const mins = Math.floor(totalSeconds / 60);
@@ -393,9 +445,16 @@ function formatTime(totalSeconds) {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
+function getDateKey(dateObj) {
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const d = String(dateObj.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 export default function App() {
   const [lang, setLang] = useState('en');
-  const [activeView, setActiveView] = useState('all'); // 'all' | 'om' | 'candle' | 'breath'
+  const [activeView, setActiveView] = useState('all'); // 'all' | 'om' | 'candle' | 'breath' | 'calendar'
   const [isOmPlaying, setIsOmPlaying] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(THIRTY_MINUTES_SECONDS);
   const audioRef = useRef(null);
@@ -414,11 +473,52 @@ export default function App() {
   const [breathDurationMins, setBreathDurationMins] = useState(5);
   const [breathSecondsLeft, setBreathSecondsLeft] = useState(5 * 60);
 
+  // Consistency Calendar Log State (Persisted in localStorage)
+  const [practiceLog, setPracticeLog] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() };
+  });
+
   const t = UI_TEXT[lang] || UI_TEXT.en;
   const article = MEDITATION_CONTENT[lang] || MEDITATION_CONTENT.en;
   const buddha = BUDDHA_STATEMENTS[lang] || BUDDHA_STATEMENTS.en;
   const breathSteps = BREATH_STEPS[lang] || BREATH_STEPS.en;
   const currentBreathStep = breathSteps[breathPhase];
+
+  // Record daily activity into consistency calendar
+  const recordPractice = (activityType) => {
+    const todayKey = getDateKey(new Date());
+    setPracticeLog((prev) => {
+      const existing = prev[todayKey];
+      const existingPriority = existing ? LEVEL_PRIORITY[existing] || 0 : 0;
+      const newPriority = LEVEL_PRIORITY[activityType] || 0;
+
+      if (newPriority <= existingPriority) return prev;
+
+      const updated = { ...prev, [todayKey]: activityType };
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      } catch {
+        // Ignore storage quota errors
+      }
+      return updated;
+    });
+  };
+
+  // Record when user visits Candle Focus while lit, or toggles Sound/Breath
+  useEffect(() => {
+    if (activeView === 'candle' && isCandleLit) {
+      recordPractice('candle');
+    }
+  }, [activeView, isCandleLit]);
 
   const openFullScreenSection = (sectionKey) => {
     setActiveView((prev) => (prev === sectionKey ? 'all' : sectionKey));
@@ -453,7 +553,10 @@ export default function App() {
     setRemainingSeconds(THIRTY_MINUTES_SECONDS);
     audioRef.current
       .play()
-      .then(() => setIsOmPlaying(true))
+      .then(() => {
+        setIsOmPlaying(true);
+        recordPractice('sound');
+      })
       .catch((err) => console.error('Audio play error:', err));
   };
 
@@ -494,9 +597,10 @@ export default function App() {
     setCandleDurationMins(mins);
     setCandleSecondsLeft(mins * 60);
     setIsCandleLit(true);
+    recordPractice('candle');
   };
 
-  // Breathing Countdown Timer (Auto-stops when timer hits 00:00)
+  // Breathing Countdown Timer
   useEffect(() => {
     if (!isBreathing) return undefined;
 
@@ -522,7 +626,7 @@ export default function App() {
     setBreathPhase(-1);
   };
 
-  // Smooth Real-Time 60fps Breathing Loop for Orb + Wave Graph
+  // Smooth Real-Time 60fps Breathing Loop
   useEffect(() => {
     if (!isBreathing) {
       setBreathPhase(-1);
@@ -542,11 +646,11 @@ export default function App() {
       setCycleElapsedMs(inCycle);
 
       if (inCycle < 4000) {
-        setBreathPhase(0); // Inhale: rises
+        setBreathPhase(0);
       } else if (inCycle < 8000) {
-        setBreathPhase(1); // Hold: constant flat
+        setBreathPhase(1);
       } else {
-        setBreathPhase(2); // Exhale: goes down
+        setBreathPhase(2);
       }
 
       rafId = window.requestAnimationFrame(tick);
@@ -571,6 +675,56 @@ export default function App() {
   };
 
   const graphPoint = getGraphPoint();
+
+  // Calendar Calculations
+  const todayStr = getDateKey(new Date());
+  const activeDaysCount = Object.keys(practiceLog).length;
+
+  const calculateCurrentStreak = () => {
+    let streak = 0;
+    const cursor = new Date();
+    if (!practiceLog[getDateKey(cursor)]) {
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    while (practiceLog[getDateKey(cursor)]) {
+      streak += 1;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    return streak;
+  };
+
+  const currentStreak = calculateCurrentStreak();
+
+  const buildMonthCells = () => {
+    const { year, month } = calendarMonth;
+    const firstDayOfWeek = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const cells = [];
+
+    for (let i = 0; i < firstDayOfWeek; i += 1) {
+      cells.push({ empty: true, key: `empty-${i}` });
+    }
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      const d = new Date(year, month, day);
+      const dateKey = getDateKey(d);
+      cells.push({
+        empty: false,
+        key: dateKey,
+        day,
+        dateKey,
+        activity: practiceLog[dateKey] || 'none',
+        isToday: dateKey === todayStr,
+      });
+    }
+    return cells;
+  };
+
+  const changeMonth = (delta) => {
+    setCalendarMonth(({ year, month }) => {
+      const next = new Date(year, month + delta, 1);
+      return { year: next.getFullYear(), month: next.getMonth() };
+    });
+  };
 
   return (
     <div className={`app-shell${activeView !== 'all' ? ' is-fullscreen-mode' : ''}`}>
@@ -612,6 +766,13 @@ export default function App() {
               onClick={() => openFullScreenSection('breath')}
             >
               {t.breathNav}
+            </button>
+            <button
+              type="button"
+              className={activeView === 'calendar' ? 'nav-active' : ''}
+              onClick={() => openFullScreenSection('calendar')}
+            >
+              {t.calendarNav}
             </button>
           </nav>
 
@@ -677,7 +838,6 @@ export default function App() {
             </blockquote>
           </main>
 
-          {/* GAUTAMA BUDDHA LIFE-REALIZATION STATEMENTS */}
           <section className="buddha-wisdom-band" aria-labelledby="buddha-wisdom-title">
             <div className="buddha-wisdom-inner">
               <header className="wisdom-header">
@@ -813,7 +973,9 @@ export default function App() {
                       if (!isCandleLit && candleSecondsLeft === 0) {
                         setCandleSecondsLeft(candleDurationMins * 60);
                       }
-                      setIsCandleLit((lit) => !lit);
+                      const nextLit = !isCandleLit;
+                      setIsCandleLit(nextLit);
+                      if (nextLit) recordPractice('candle');
                     }}
                   >
                     <Flame size={16} />
@@ -859,7 +1021,6 @@ export default function App() {
                 </div>
 
                 <div className="breath-visual-grid">
-                  {/* Left: Breathing Orb */}
                   <div className={`breath-stage${isBreathing ? ' breath-active' : ''} ${currentBreathStep ? `breath-phase-${breathPhase}` : ''}`}>
                     <div className="breath-ring breath-ring-outer" />
                     <div className="breath-ring breath-ring-inner" />
@@ -873,7 +1034,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Right: Live Breath Wave Graph (Inhale Up -> Hold Flat -> Exhale Down) */}
                   <div className="breath-graph-card" aria-label="Breathing rhythm graph">
                     <div className="breath-graph-head">
                       <span>BREATH RHYTHM GRAPH</span>
@@ -957,7 +1117,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Timer Duration Presets + Start / Stop / Reset Controls */}
                 <div className="breath-controls-bar">
                   <div className="breath-presets" role="group" aria-label="Breathing session duration">
                     {[2, 5, 10].map((mins) => (
@@ -979,8 +1138,11 @@ export default function App() {
                         className={`button ${isBreathing ? 'button-outline-stop' : 'button-forest'}`}
                         type="button"
                         onClick={() => {
-                          if (!isBreathing && breathSecondsLeft === 0) {
-                            setBreathSecondsLeft(breathDurationMins * 60);
+                          if (!isBreathing) {
+                            if (breathSecondsLeft === 0) {
+                              setBreathSecondsLeft(breathDurationMins * 60);
+                            }
+                            recordPractice('breath');
                           }
                           setIsBreathing((active) => !active);
                         }}
@@ -1001,6 +1163,100 @@ export default function App() {
                 </div>
               </section>
             </div>
+          )}
+
+          {/* FULLSCREEN DAILY CONSISTENCY CALENDAR PAGE */}
+          {activeView === 'calendar' && (
+            <section className="calendar-sanctuary section-fullscreen" aria-labelledby="calendar-title">
+              <div className="calendar-container">
+                <div className="calendar-top-row">
+                  <div>
+                    <p className="section-kicker"><span /> {t.calendarOverline}</p>
+                    <h2 id="calendar-title">{t.calendarTitle}</h2>
+                    <p className="calendar-sub">{t.calendarDesc}</p>
+                  </div>
+
+                  <div className="calendar-stats-row">
+                    <div className="stat-pill-box">
+                      <span>{t.currentStreakLabel}</span>
+                      <strong>{currentStreak} {t.daysUnit}</strong>
+                    </div>
+                    <div className="stat-pill-box">
+                      <span>{t.activeDaysLabel}</span>
+                      <strong>{activeDaysCount} {t.daysUnit}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="calendar-board">
+                  <div className="calendar-month-nav">
+                    <button type="button" onClick={() => changeMonth(-1)} aria-label="Previous month">
+                      <ChevronLeft size={18} />
+                    </button>
+                    <h3>
+                      <CalendarIcon size={17} /> {MONTH_NAMES[calendarMonth.month]} {calendarMonth.year}
+                    </h3>
+                    <button type="button" onClick={() => changeMonth(1)} aria-label="Next month">
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
+
+                  <div className="calendar-weekdays">
+                    {WEEKDAY_LABELS.map((w) => (
+                      <span key={w}>{w}</span>
+                    ))}
+                  </div>
+
+                  <div className="calendar-grid">
+                    {buildMonthCells().map((cell) => {
+                      if (cell.empty) {
+                        return <div key={cell.key} className="cal-square cal-empty" />;
+                      }
+
+                      const tooltipText =
+                        cell.activity === 'breath'
+                          ? `${cell.dateKey}: Breathing Coach (Dark Green)`
+                          : cell.activity === 'candle'
+                            ? `${cell.dateKey}: Candle Focus (Medium Green)`
+                            : cell.activity === 'sound'
+                              ? `${cell.dateKey}: OM & Delta Sound (Basic Green)`
+                              : `${cell.dateKey}: No practice`;
+
+                      return (
+                        <div
+                          key={cell.key}
+                          className={`cal-square level-${cell.activity}${cell.isToday ? ' is-today' : ''}`}
+                          title={tooltipText}
+                          aria-label={tooltipText}
+                        >
+                          <span className="cal-day-num">{cell.day}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Color Legend */}
+                  <div className="calendar-legend">
+                    <div className="legend-item">
+                      <span className="legend-box level-none" />
+                      <span>{t.legendNone}</span>
+                    </div>
+                    <div className="legend-item">
+                      <span className="legend-box level-sound" />
+                      <span>{t.legendSound}</span>
+                    </div>
+                    <div className="legend-item">
+                      <span className="legend-box level-candle" />
+                      <span>{t.legendCandle}</span>
+                    </div>
+                    <div className="legend-item">
+                      <span className="legend-box level-breath" />
+                      <span>{t.legendBreath}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
           )}
         </main>
       )}
