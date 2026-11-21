@@ -472,7 +472,337 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #b7c4b5; }
 .status-active { background: #efd99e; box-shadow: 0 0 0 4px rgba(239,217,158,.13); animation: status-blink 1.6s ease-in-out infinite; }
 
-.fullscreen-single-container,
+/* FULLSCREEN BURNING CANDLE TRATAKA SANCTUARY */
+.candle-sanctuary.section-fullscreen {
+  position: relative;
+  width: 100%;
+  min-height: calc(100vh - 76px) !important;
+  padding: 88px 24px 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+  overflow: hidden;
+  color: #f9f3e3;
+  background: radial-gradient(circle at 50% 48%, #251a10 0%, #110d09 52%, #090705 100%);
+  transition: background .8s ease;
+}
+
+.candle-sanctuary.is-out {
+  background: radial-gradient(circle at 50% 48%, #161513 0%, #0b0a09 65%, #060605 100%);
+}
+
+.candle-ambient-aura {
+  position: absolute;
+  top: 46%;
+  left: 50%;
+  width: 520px;
+  height: 520px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 179, 71, .22) 0%, rgba(255, 120, 20, .07) 42%, transparent 72%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .8s ease;
+}
+
+.candle-sanctuary.is-lit .candle-ambient-aura {
+  opacity: 1;
+  animation: aura-breathe 3.8s ease-in-out infinite;
+}
+
+.candle-header-copy {
+  position: relative;
+  z-index: 2;
+  max-width: 560px;
+}
+
+.candle-header-copy h2 {
+  margin: 10px 0 8px;
+  font-family: var(--serif);
+  font-size: clamp(26px, 3.2vw, 38px);
+  font-weight: 500;
+  color: #fff6df;
+  letter-spacing: -.5px;
+}
+
+.candle-header-copy p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: rgba(245, 235, 214, .72);
+}
+
+.candle-stage {
+  position: relative;
+  z-index: 2;
+  width: 220px;
+  height: 290px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 12px 0;
+}
+
+.flame-halo {
+  position: absolute;
+  top: 12px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 206, 107, .42) 0%, rgba(255, 140, 30, .14) 55%, transparent 75%);
+  opacity: 0;
+  transition: opacity .5s ease;
+}
+
+.is-lit .flame-halo {
+  opacity: 1;
+  animation: halo-flicker 2.2s ease-in-out infinite;
+}
+
+.flame-assembly {
+  position: relative;
+  width: 44px;
+  height: 92px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-bottom: -4px;
+}
+
+.flame-outer {
+  position: absolute;
+  bottom: 0;
+  width: 34px;
+  height: 82px;
+  border-radius: 50% 50% 45% 45% / 65% 65% 35% 35%;
+  background: radial-gradient(ellipse at 50% 72%, #fff5b8 0%, #ffb627 48%, #ff6a00 88%, rgba(255, 90, 0, 0) 100%);
+  box-shadow: 0 0 28px rgba(255, 165, 38, .85), 0 0 65px rgba(255, 120, 15, .45);
+  transform-origin: bottom center;
+  opacity: 0;
+  transform: scale(.2);
+  transition: opacity .45s ease, transform .45s ease;
+}
+
+.flame-inner {
+  position: absolute;
+  bottom: 4px;
+  width: 19px;
+  height: 50px;
+  border-radius: 50% 50% 45% 45% / 65% 65% 35% 35%;
+  background: radial-gradient(ellipse at 50% 75%, #ffffff 15%, #fff099 70%, rgba(255, 190, 60, 0) 100%);
+  transform-origin: bottom center;
+  opacity: 0;
+  transition: opacity .45s ease;
+}
+
+.flame-core {
+  position: absolute;
+  bottom: 2px;
+  width: 12px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(70, 145, 255, .75);
+  filter: blur(1px);
+  opacity: 0;
+  transition: opacity .45s ease;
+}
+
+.is-lit .flame-outer {
+  opacity: 1;
+  transform: scale(1);
+  animation: flame-sway 2.6s ease-in-out infinite;
+}
+
+.is-lit .flame-inner {
+  opacity: 1;
+  animation: flame-inner-dance 1.9s ease-in-out infinite;
+}
+
+.is-lit .flame-core {
+  opacity: 1;
+}
+
+.smoke-wisp {
+  position: absolute;
+  bottom: 6px;
+  width: 10px;
+  height: 58px;
+  border-radius: 50%;
+  background: linear-gradient(to top, rgba(210, 210, 210, .45), transparent);
+  filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.is-out .smoke-wisp {
+  animation: smoke-rise 3.2s ease-out forwards;
+}
+
+.candle-wick {
+  width: 3px;
+  height: 14px;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(to top, #2a211b, #ff8c2b);
+  z-index: 2;
+}
+
+.is-out .candle-wick {
+  background: #2b2623;
+}
+
+.candle-body {
+  position: relative;
+  width: 78px;
+  height: 144px;
+  border-radius: 10px 10px 6px 6px;
+  background: linear-gradient(90deg, #e7dcc4 0%, #fbf5e6 38%, #dfd1b4 100%);
+  box-shadow: inset 0 10px 18px rgba(255, 185, 80, .35), 0 12px 30px rgba(0, 0, 0, .65);
+}
+
+.is-out .candle-body {
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .75);
+}
+
+.candle-wax-top {
+  position: absolute;
+  top: -5px;
+  left: 3px;
+  right: 3px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, #ffe8a3 0%, #efe3c8 75%);
+}
+
+.is-out .candle-wax-top {
+  background: #e3d6ba;
+}
+
+.candle-drip {
+  position: absolute;
+  top: 4px;
+  width: 8px;
+  border-radius: 0 0 8px 8px;
+  background: #f5ecda;
+}
+.drip-left { left: 12px; height: 28px; }
+.drip-right { right: 16px; height: 19px; }
+
+.candle-holder {
+  width: 126px;
+  height: 14px;
+  margin-top: -2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #5c4623 0%, #b8924a 50%, #4d3a1c 100%);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .7);
+}
+
+.candle-controls {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.candle-presets {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.candle-presets button {
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(239, 217, 158, .25);
+  background: rgba(255, 255, 255, .05);
+  color: #e7dec8;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s ease, border-color .2s ease;
+}
+
+.candle-presets button:hover {
+  background: rgba(239, 217, 158, .15);
+}
+
+.candle-presets button.preset-active {
+  background: #efd99e;
+  color: #23190d;
+  border-color: #efd99e;
+}
+
+.candle-timer-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(239, 217, 158, .45);
+  color: #f4da96;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.candle-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.candle-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, .2);
+  background: rgba(255, 255, 255, .06);
+  color: #ece3cf;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+
+.candle-reset-btn:hover {
+  background: rgba(255, 255, 255, .14);
+}
+
+@keyframes flame-sway {
+  0%, 100% { transform: scale(1) rotate(-1.5deg); }
+  25% { transform: scale(1.03, .97) rotate(1.8deg); }
+  50% { transform: scale(.98, 1.04) rotate(-1deg); }
+  75% { transform: scale(1.02, .99) rotate(1.2deg); }
+}
+
+@keyframes flame-inner-dance {
+  0%, 100% { transform: scaleY(1) translateX(0); }
+  50% { transform: scaleY(1.06) translateX(1px); }
+}
+
+@keyframes halo-flicker {
+  0%, 100% { transform: scale(1); opacity: .92; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+
+@keyframes aura-breathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.07); }
+}
+
+@keyframes smoke-rise {
+  0% { opacity: .65; transform: translateY(0) scaleX(1); }
+  100% { opacity: 0; transform: translateY(-48px) scaleX(2.4); }
+}
+
 .fullscreen-breath-wrapper {
   width: 100%;
   max-width: 100%;
@@ -482,7 +812,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 }
 
 .panel { background: #fff; }
-.assistant-panel.section-fullscreen,
 .breath-panel.section-fullscreen {
   width: 100%;
   min-height: calc(100vh - 76px) !important;
@@ -491,48 +820,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
   padding: 84px max(32px, calc((100vw - 1192px) / 2)) 32px;
   display: flex;
   flex-direction: column;
-}
-
-.assistant-panel.section-fullscreen {
-  justify-content: space-between;
-}
-
-.panel-heading { display: flex; align-items: center; gap: 12px; }
-.icon-well { width: 40px; height: 40px; display: grid; flex: 0 0 40px; place-items: center; border-radius: 13px; }
-.icon-lilac { color: #7c6a98; background: #f0edf5; }
-.icon-sage { color: #4c7454; background: #eaf1e7; }
-.panel-overline { margin-bottom: 3px; font-size: 8px; letter-spacing: 1.18px; }
-.panel-heading h3 { margin: 0; color: #2a4035; font-family: var(--serif); font-size: 22px; font-weight: 600; letter-spacing: -.25px; }
-.online-indicator { width: 7px; height: 7px; margin-left: auto; border-radius: 50%; background: #81a382; box-shadow: 0 0 0 4px #edf4ed; }
-
-.chat-window { flex: 1; min-height: 52vh; display: flex; flex-direction: column; gap: 13px; overflow-y: auto; margin: 20px 0 14px; padding: 18px 16px; border: 1px solid #f0f0eb; border-radius: 14px; background: linear-gradient(150deg, #fafaf7, #f7f8f4); scrollbar-color: #d4ddd2 transparent; scrollbar-width: thin; }
-.message-row { display: flex; align-items: flex-end; gap: 8px; }
-.message-row-user { justify-content: flex-end; }
-.assistant-avatar { display: grid; width: 24px; height: 24px; flex: 0 0 24px; place-items: center; border-radius: 50%; color: #6f826f; background: #e8eee5; }
-.chat-bubble { max-width: min(84%, 520px); padding: 12px 16px; border-radius: 14px; font-size: 13px; line-height: 1.65; overflow-wrap: anywhere; }
-.chat-bubble-assistant { border: 1px solid #e9eee7; border-bottom-left-radius: 4px; color: #405448; background: white; }
-.chat-bubble-user { border-bottom-right-radius: 4px; color: white; background: #355e47; }
-.typing-indicator { display: flex; align-items: center; gap: 4px; padding-left: 32px; color: #879186; }
-.typing-indicator > span:not(.typing-copy) { width: 5px; height: 5px; border-radius: 50%; background: #90a18e; animation: typing 1.1s ease-in-out infinite; }
-.typing-indicator > span:nth-child(2) { animation-delay: .15s; }
-.typing-indicator > span:nth-child(3) { animation-delay: .3s; }
-.typing-copy { margin-left: 5px; font-size: 11px; }
-.chat-form { display: flex; align-items: center; gap: 9px; padding: 8px 8px 8px 15px; border: 1px solid #e5e9e1; border-radius: 13px; background: #fff; transition: border-color .2s, box-shadow .2s; }
-.chat-form:focus-within { border-color: #a6b8a5; box-shadow: 0 0 0 3px rgba(166,184,165,.14); }
-.chat-form input { min-width: 0; width: 100%; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 13px; }
-.chat-form input::placeholder { color: #a3aaa0; }
-.chat-form input:focus-visible { outline: 0; }
-.send-button { width: 38px; height: 38px; display: grid; flex: 0 0 38px; place-items: center; border: 0; border-radius: 10px; color: white; background: var(--forest); cursor: pointer; transition: background .2s, transform .2s; }
-.send-button:hover:not(:disabled) { transform: translateY(-1px); background: #376349; }
-.send-button:disabled { color: #aab6aa; background: #eff2ed; cursor: not-allowed; }
-.panel-footnote { margin: 11px 0 0; color: #a0a79e; font-size: 10px; line-height: 1.5; }
-
-/* Fullscreen Breathing Coach */
-.breath-panel.section-fullscreen {
   align-items: center;
   text-align: center;
   justify-content: center;
 }
+
+.panel-heading { display: flex; align-items: center; gap: 12px; }
+.icon-well { width: 40px; height: 40px; display: grid; flex: 0 0 40px; place-items: center; border-radius: 13px; }
+.icon-sage { color: #4c7454; background: #eaf1e7; }
+.panel-overline { margin-bottom: 3px; font-size: 8px; letter-spacing: 1.18px; }
+.panel-heading h3 { margin: 0; color: #2a4035; font-family: var(--serif); font-size: 22px; font-weight: 600; letter-spacing: -.25px; }
 
 .breath-panel.section-fullscreen .panel-heading {
   width: 100%;
@@ -583,7 +880,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 @keyframes settle-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes orbit-pulse { 0%, 100% { transform: scale(.78); opacity: .7; } 50% { transform: scale(.86); opacity: 1; } }
 @keyframes status-blink { 0%, 100% { opacity: 1; } 50% { opacity: .52; } }
-@keyframes typing { 0%, 60%, 100% { opacity: .4; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
 
 @media (max-width: 850px) {
   .header-inner, .hero-content, .meditation-article-wrap, .buddha-wisdom-inner { width: min(100% - 40px, 680px); }
@@ -608,6 +904,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
   .fullscreen-wrap { padding-top: 96px; }
   .fullscreen-topbar { top: 108px; left: 18px; }
   .sound-card.section-fullscreen { flex-direction: column; align-items: flex-start; padding: 80px 22px 48px; }
+  .candle-sanctuary.section-fullscreen { padding: 104px 18px 44px; }
   .hero { min-height: 560px; padding-top: 96px; background-position: 60% center; }
   .hero-shade { background: linear-gradient(90deg, rgba(19,37,29,.66), rgba(24,42,33,.15)), linear-gradient(0deg, rgba(20,37,29,.75), transparent 76%); }
   .hero-content { padding-bottom: 77px; }

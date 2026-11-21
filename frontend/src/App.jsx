@@ -3,12 +3,12 @@ import {
   ArrowDown,
   ArrowLeft,
   Clock,
+  Flame,
   Globe,
   Leaf,
   Pause,
   Play,
-  Send,
-  Sparkles,
+  RotateCcw,
   Volume2,
   Wind,
 } from 'lucide-react';
@@ -19,54 +19,72 @@ const THIRTY_MINUTES_SECONDS = 30 * 60;
 const UI_TEXT = {
   en: {
     heroTitle: 'Calm mind, rooted presence — in your language.',
-    heroSub: '1Hz Delta Wave Binaural Drone, multilingual AI meditation guidance, and interactive breathwork.',
+    heroSub: '1Hz Delta Wave Binaural Drone, Trataka candle-gazing focus, and interactive breathwork.',
     exploreLink: 'Read the meditation guide',
     omNav: 'OM & Delta Drone',
     omTitle: '1Hz Delta Wave & Sacred OM Synth Drone',
     omDesc: 'Designed ambient synth drone with a 1Hz Delta Binaural Beat for a continuous 30-minute deep relaxation session.',
     startOm: 'Start 30-Min Relaxation Drone',
     stopOm: 'Stop Drone',
+    candleNav: 'Candle Focus',
+    candleOverline: 'TRATAKA · SINGLE-POINTED GAZE',
+    candleTitle: 'Sacred Candle Flame Meditation',
+    candleDesc: 'Soften your eyes and rest your gaze steadily on the living flame. When thoughts arise, let them dissolve into the warm light.',
+    candleLitStatus: 'FLAME LIT · GAZE SOFTLY',
+    candleUnlitStatus: 'CANDLE EXTINGUISHED',
+    extinguishBtn: 'Extinguish Flame',
+    relightBtn: 'Light Candle',
+    resetTimerBtn: 'Reset Timer',
     breath: 'Breathing Coach (4-4-6)',
     breathNav: 'Breathing Coach',
-    aiTitle: 'AI Wellness Assistant',
-    placeholder: 'Share how you feel right now...',
-    send: 'Ask AI',
     startBreath: 'Start Breathing',
     stopBreath: 'Stop',
     backHome: 'Back to Home',
   },
   kn: {
     heroTitle: 'ಶಾಂತ ಮನಸ್ಸು, ಸ್ಥಿರ ಚಿತ್ತ — ನಿಮ್ಮದೇ ಭಾಷೆಯಲ್ಲಿ.',
-    heroSub: '1Hz ಡೆಲ್ಟಾ ವೇವ್ ಬೈನೌರಲ್ ನಾದ, ಬಹುಭಾಷಾ AI ಧ್ಯಾನ ಮಾರ್ಗದರ್ಶನ ಮತ್ತು ಉಸಿರಾಟದ ಅಭ್ಯಾಸ.',
+    heroSub: '1Hz ಡೆಲ್ಟಾ ವೇವ್ ಬೈನೌರಲ್ ನಾದ, ತ್ರಾಟಕ ದೀಪ ಧ್ಯಾನ ಮತ್ತು ಉಸಿರಾಟದ ಅಭ್ಯಾಸ.',
     exploreLink: 'ಧ್ಯಾನ ಮಾರ್ಗದರ್ಶಿಯನ್ನು ಓದಿ',
     omNav: 'ಓಂ & ಡೆಲ್ಟಾ ನಾದ',
     omTitle: '1Hz ಡೆಲ್ಟಾ ವೇವ್ & ಪವಿತ್ರ ಓಂ ಸಿಂಥ್ ಡ್ರೋನ್',
     omDesc: 'ಆಳವಾದ ವಿಶ್ರಾಂತಿ ಮತ್ತು ಮನಸ್ಸಿನ ಶಾಂತಿಗಾಗಿ 30 ನಿಮಿಷಗಳ ನಿರಂತರ 1Hz ಡೆಲ್ಟಾ ಬೈನೌರಲ್ ನಾದವನ್ನು ಆಲಿಸಿ.',
     startOm: '30 ನಿಮಿಷಗಳ ವಿಶ್ರಾಂತಿ ನಾದ ಪ್ರಾರಂಭಿಸಿ',
     stopOm: 'ನಿಲ್ಲಿಸಿ',
+    candleNav: 'ದೀಪ ಧ್ಯಾನ',
+    candleOverline: 'ತ್ರಾಟಕ · ಏಕಾಗ್ರ ದೃಷ್ಟಿ ಧ್ಯಾನ',
+    candleTitle: 'ಉರಿಯುತ್ತಿರುವ ದೀಪದ ಜ್ವಾಲೆ ಧ್ಯಾನ',
+    candleDesc: 'ಕಣ್ಣುಗಳನ್ನು ಮೃದುವಾಗಿರಿಸಿ ಉರಿಯುತ್ತಿರುವ ಜ್ವಾಲೆಯ ತುದಿಯ ಮೇಲೆ ನಿಮ್ಮ ಗಮನವನ್ನು ನೆಲೆಗೊಳಿಸಿ. ಆಲೋಚನೆಗಳು ಬಂದಾಗ ಅವುಗಳನ್ನು ಬೆಳಕಿನಲ್ಲಿ ಕರಗಲು ಬಿಡಿ.',
+    candleLitStatus: 'ಜ್ವಾಲೆ ಬೆಳಗುತ್ತಿದೆ · ಶಾಂತವಾಗಿ ಗಮನಿಸಿ',
+    candleUnlitStatus: 'ದೀಪ ಆರಿದೆ',
+    extinguishBtn: 'ದೀಪ ಆರಿಸಿ',
+    relightBtn: 'ದೀಪ ಬೆಳಗಿಸಿ',
+    resetTimerBtn: 'ಟೈಮರ್ ಮರುಹೊಂದಿಸಿ',
     breath: 'ಉಸಿರಾಟದ ಕೋಚ್ (4-4-6)',
     breathNav: 'ಉಸಿರಾಟದ ಕೋಚ್',
-    aiTitle: 'AI ವೆಲ್‌ನೆಸ್ ಸಹಾಯಕ',
-    placeholder: 'ನಿಮ್ಮ ಮನಸ್ಥಿತಿಯನ್ನು ಇಲ್ಲಿ ಹಂಚಿಕೊಳ್ಳಿ...',
-    send: 'ಕಳುಹಿಸಿ',
     startBreath: 'ಉಸಿರಾಟ ಪ್ರಾರಂಭಿಸಿ',
     stopBreath: 'ನಿಲ್ಲಿಸಿ',
     backHome: 'ಹೋಮ್‌ಗೆ ಹಿಂತಿರುಗಿ',
   },
   hi: {
     heroTitle: 'शांत मन, स्थिर उपस्थिति — आपकी अपनी भाषा में।',
-    heroSub: '1Hz डेल्टा वेव बाइनॉरल ड्रोन, बहुभाषी AI ध्यान मार्गदर्शन और श्वास अभ्यास।',
+    heroSub: '1Hz डेल्टा वेव बाइनॉरल ड्रोन, त्राटक दीप ध्यान और श्वास अभ्यास।',
     exploreLink: 'ध्यान मार्गदर्शिका पढ़ें',
     omNav: 'ॐ & डेल्टा ड्रोन',
     omTitle: '1Hz डेल्टा वेव & पवित्र ॐ सिंथ ड्रोन',
     omDesc: 'गहरे विश्राम और मानसिक शांति के लिए 30 मिनट के निरंतर 1Hz डेल्टा बाइनॉरल ध्वनि का अनुभव करें।',
     startOm: '30-मिनट रिलैक्सेशन ड्रोन शुरू करें',
     stopOm: 'रोकें',
+    candleNav: 'दीप ध्यान',
+    candleOverline: 'त्राटक · एकाग्र दृष्टि ध्यान',
+    candleTitle: 'जलती हुई मोमबत्ती की लौ पर ध्यान',
+    candleDesc: 'अपनी आँखों को कोमल रखें और जलती हुई लौ पर स्थिर दृष्टि टिकाएँ। जब भी विचार आएँ, उन्हें इस शांत प्रकाश में विलीन होने दें।',
+    candleLitStatus: 'लौ प्रज्वलित है · कोमलता से देखें',
+    candleUnlitStatus: 'दीप बुझा हुआ है',
+    extinguishBtn: 'लौ बुझाएँ',
+    relightBtn: 'दीप जलाएँ',
+    resetTimerBtn: 'टाइमर रीसेट करें',
     breath: 'श्वास कोच (4-4-6)',
     breathNav: 'श्वास कोच',
-    aiTitle: 'AI वेलनेस सहायक',
-    placeholder: 'अभी आप कैसा महसूस कर रहे हैं...',
-    send: 'भेजें',
     startBreath: 'अभ्यास शुरू करें',
     stopBreath: 'रोकें',
     backHome: 'होम पर वापस जाएं',
@@ -99,7 +117,7 @@ const MEDITATION_CONTENT = {
         title: 'A Simple Daily Practice (Step by Step)',
         paragraphs: [
           'Find a quiet corner where you can sit upright with a relaxed spine and softened shoulders. Set a gentle timer — even 10 to 30 minutes is enough — so you do not need to watch the clock.',
-          'Close your eyes and take three slow, deep breaths: inhale gently, pause softly, and let the exhale be longer than the inhale. Rest your attention on the natural rhythm of your breath or the ambient OM drone. Whenever your mind drifts, smile inwardly and guide it back without judgment.',
+          'Close your eyes and take three slow, deep breaths: inhale gently, pause softly, and let the exhale be longer than the inhale. Rest your attention on the natural rhythm of your breath, a steady candle flame, or the ambient OM drone. Whenever your mind drifts, smile inwardly and guide it back without judgment.',
         ],
       },
       {
@@ -146,7 +164,7 @@ const MEDITATION_CONTENT = {
         title: 'ದೈನಂದಿನ ಸರಳ ಧ್ಯಾನ ವಿಧಾನ',
         paragraphs: [
           'ನಿಶ್ಯಬ್ದವಾದ ಸ್ಥಳದಲ್ಲಿ ಬೆನ್ನು ನೇರವಾಗಿರಿಸಿ, ಭುಜಗಳನ್ನು ಸಡಿಲಬಿಟ್ಟು ಆರಾಮವಾಗಿ ಕುಳಿತುಕೊಳ್ಳಿ. ಪದೇ ಪದೇ ಗಡಿಯಾರ ನೋಡುವುದನ್ನು ತಪ್ಪಿಸಲು 10 ರಿಂದ 30 ನಿಮಿಷಗಳ ಟೈಮರ್ ಇಟ್ಟುಕೊಳ್ಳಿ.',
-          'ಕಣ್ಣುಗಳನ್ನು ಮುಚ್ಚಿ ಮೂರು ಬಾರಿ ದೀರ್ಘವಾಗಿ ಉಸಿರಾಡಿ. ನಂತರ ನಿಮ್ಮ ಸಹಜ ಉಸಿರಾಟದ ಲಯ ಅಥವಾ ಓಂ ನಾದದ ಮೇಲೆ ಗಮನವಿಡಿ. ಮನಸ್ಸು ಬೇರೆಡೆ ಹೋದಾಗಲೆಲ್ಲಾ ಬೇಸರಪಡದೆ, ಮೃದುವಾಗಿ ಮತ್ತೆ ಉಸಿರು ಅಥವಾ ನಾದದ ಕಡೆಗೆ ಕರೆತನ್ನಿ.',
+          'ಕಣ್ಣುಗಳನ್ನು ಮುಚ್ಚಿ ಮೂರು ಬಾರಿ ದೀರ್ಘವಾಗಿ ಉಸಿರಾಡಿ. ನಂತರ ನಿಮ್ಮ ಸಹಜ ಉಸಿರಾಟದ ಲಯ, ಉರಿಯುತ್ತಿರುವ ದೀಪದ ಜ್ವಾಲೆ ಅಥವಾ ಓಂ ನಾದದ ಮೇಲೆ ಗಮನವಿಡಿ. ಮನಸ್ಸು ಬೇರೆಡೆ ಹೋದಾಗಲೆಲ್ಲಾ ಬೇಸರಪಡದೆ, ಮೃದುವಾಗಿ ಮತ್ತೆ ಕರೆತನ್ನಿ.',
         ],
       },
       {
@@ -193,7 +211,7 @@ const MEDITATION_CONTENT = {
         title: 'सरल दैनिक अभ्यास (कदम दर कदम)',
         paragraphs: [
           'किसी शांत स्थान पर रीढ़ की हड्डी को सीधा और कंधों को ढीला रखकर बैठें। बार-बार समय देखने से बचने के लिए 10 से 30 मिनट का टाइमर लगा लें।',
-          'आँखें बंद करें और तीन धीमी, गहरी साँसें लें। अब अपना ध्यान साँसों की स्वाभाविक गति या ॐ नाद पर रखें। जब भी मन भटके, बिना किसी खीझ के प्रेमपूर्वक उसे वापस ले आएँ।',
+          'आँखें बंद करें और तीन धीमी, गहरी साँसें लें। अब अपना ध्यान साँसों की स्वाभाविक गति, जलती हुई लौ या ॐ नाद पर रखें। जब भी मन भटके, बिना किसी खीझ के प्रेमपूर्वक उसे वापस ले आएँ।',
         ],
       },
       {
@@ -363,23 +381,20 @@ function formatTime(totalSeconds) {
 
 export default function App() {
   const [lang, setLang] = useState('en');
-  const [activeView, setActiveView] = useState('all'); // 'all' | 'om' | 'ai' | 'breath'
+  const [activeView, setActiveView] = useState('all'); // 'all' | 'om' | 'candle' | 'breath'
   const [isOmPlaying, setIsOmPlaying] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(THIRTY_MINUTES_SECONDS);
   const audioRef = useRef(null);
-  const chatEndRef = useRef(null);
   const meditationRef = useRef(null);
 
+  // Candle Trataka State
+  const [isCandleLit, setIsCandleLit] = useState(true);
+  const [candleDurationMins, setCandleDurationMins] = useState(10);
+  const [candleSecondsLeft, setCandleSecondsLeft] = useState(10 * 60);
+
+  // Breathing Coach State
   const [isBreathing, setIsBreathing] = useState(false);
   const [breathPhase, setBreathPhase] = useState(-1);
-  const [chatInput, setChatInput] = useState('');
-  const [messages, setMessages] = useState([
-    {
-      sender: 'ASSISTANT',
-      text: 'Namaste! How is your mind feeling today? Ask me for a guided practice in English, ಕನ್ನಡ, or हिंदी.',
-    },
-  ]);
-  const [loadingAi, setLoadingAi] = useState(false);
 
   const t = UI_TEXT[lang] || UI_TEXT.en;
   const article = MEDITATION_CONTENT[lang] || MEDITATION_CONTENT.en;
@@ -440,6 +455,29 @@ export default function App() {
     return () => window.clearInterval(intervalId);
   }, [isOmPlaying]);
 
+  // Candle Trataka Countdown Timer
+  useEffect(() => {
+    if (activeView !== 'candle' || !isCandleLit) return undefined;
+
+    const timerId = window.setInterval(() => {
+      setCandleSecondsLeft((prev) => {
+        if (prev <= 1) {
+          setIsCandleLit(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(timerId);
+  }, [activeView, isCandleLit]);
+
+  const selectCandleMinutes = (mins) => {
+    setCandleDurationMins(mins);
+    setCandleSecondsLeft(mins * 60);
+    setIsCandleLit(true);
+  };
+
   useEffect(() => {
     if (!isBreathing) {
       setBreathPhase(-1);
@@ -459,63 +497,6 @@ export default function App() {
 
     return () => window.clearTimeout(timeoutId);
   }, [isBreathing, breathSteps]);
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [messages, loadingAi]);
-
-  const handleSendChat = async (e) => {
-    e.preventDefault();
-    if (!chatInput.trim() || loadingAi) return;
-
-    const userMsg = chatInput.trim();
-    setMessages((prev) => [...prev, { sender: 'USER', text: userMsg }]);
-    setChatInput('');
-    setLoadingAi(true);
-
-    try {
-      const res = await fetch('/api/v1/ai/assistant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMsg, language: lang, mood: '4' }),
-      });
-      if (!res.ok) throw new Error('Assistant request failed');
-      const data = await res.json();
-      setMessages((prev) => [
-        ...prev,
-        { sender: 'ASSISTANT', text: data.reply || data.response || JSON.stringify(data) },
-      ]);
-    } catch {
-      try {
-        const directRes = await fetch('http://127.0.0.1:8000/api/ai/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_message: userMsg, language: lang }),
-        });
-        if (!directRes.ok) throw new Error('Assistant fallback failed');
-        const directData = await directRes.json();
-        setMessages((prev) => [
-          ...prev,
-          { sender: 'ASSISTANT', text: directData.reply || 'Take 3 slow breaths.' },
-        ]);
-      } catch {
-        setMessages((prev) => [
-          ...prev,
-          {
-            sender: 'ASSISTANT',
-            text:
-              lang === 'kn'
-                ? 'ದೀರ್ಘವಾಗಿ ಉಸಿರಾಡಿ (4 ಸೆಕೆಂಡ್ ಒಳಗೆ, 6 ಸೆಕೆಂಡ್ ಹೊರಗೆ). ನಿಮ್ಮ ಮನಸ್ಸು ಶಾಂತವಾಗುತ್ತದೆ.'
-                : lang === 'hi'
-                  ? 'तीन गहरी, धीमी साँसें लें — 4 सेकंड साँस अंदर, 4 सेकंड रोकें और 6 सेकंड में बाहर छोड़ें।'
-                  : 'Take three slow, deep breaths — inhale for 4 seconds, hold for 4, and exhale for 6 seconds.',
-          },
-        ]);
-      }
-    } finally {
-      setLoadingAi(false);
-    }
-  };
 
   return (
     <div className={`app-shell${activeView !== 'all' ? ' is-fullscreen-mode' : ''}`}>
@@ -546,10 +527,10 @@ export default function App() {
             </button>
             <button
               type="button"
-              className={activeView === 'ai' ? 'nav-active' : ''}
-              onClick={() => openFullScreenSection('ai')}
+              className={activeView === 'candle' ? 'nav-active' : ''}
+              onClick={() => openFullScreenSection('candle')}
             >
-              {t.aiTitle}
+              {t.candleNav}
             </button>
             <button
               type="button"
@@ -702,47 +683,86 @@ export default function App() {
             </section>
           )}
 
-          {activeView === 'ai' && (
-            <div className="fullscreen-single-container">
-              <section className="panel assistant-panel section-fullscreen" aria-labelledby="assistant-title">
-                <div className="panel-heading">
-                  <span className="icon-well icon-lilac"><Sparkles size={19} /></span>
-                  <div>
-                    <p className="panel-overline">HERE WITH YOU</p>
-                    <h3 id="assistant-title">{t.aiTitle}</h3>
-                  </div>
-                  <span className="online-indicator" title="Assistant ready" />
-                </div>
+          {/* FULLSCREEN BURNING CANDLE TRATAKA MEDITATION */}
+          {activeView === 'candle' && (
+            <section
+              className={`candle-sanctuary section-fullscreen${isCandleLit ? ' is-lit' : ' is-out'}`}
+              aria-labelledby="candle-title"
+            >
+              <div className="candle-ambient-aura" aria-hidden="true" />
 
-                <div className="chat-window" role="log" aria-live="polite" aria-label="Conversation">
-                  {messages.map((message, index) => (
-                    <div key={`${message.sender}-${index}`} className={`message-row ${message.sender === 'USER' ? 'message-row-user' : ''}`}>
-                      {message.sender !== 'USER' && <span className="assistant-avatar"><Sparkles size={13} /></span>}
-                      <div className={`chat-bubble ${message.sender === 'USER' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
-                        {message.text}
-                      </div>
-                    </div>
+              <div className="candle-header-copy">
+                <p className="section-kicker light-kicker"><span /> {t.candleOverline}</p>
+                <h2 id="candle-title">{t.candleTitle}</h2>
+                <p>{t.candleDesc}</p>
+              </div>
+
+              {/* Realistic Burning Candle Visual */}
+              <div className="candle-stage" aria-hidden="true">
+                <div className="flame-halo" />
+                <div className="flame-assembly">
+                  <div className="flame-outer" />
+                  <div className="flame-inner" />
+                  <div className="flame-core" />
+                  <div className="smoke-wisp" />
+                </div>
+                <div className="candle-wick" />
+                <div className="candle-body">
+                  <div className="candle-wax-top" />
+                  <div className="candle-drip drip-left" />
+                  <div className="candle-drip drip-right" />
+                </div>
+                <div className="candle-holder" />
+              </div>
+
+              {/* Timer & Candle Controls */}
+              <div className="candle-controls">
+                <div className="candle-presets" role="group" aria-label="Candle meditation duration">
+                  {[5, 10, 15].map((mins) => (
+                    <button
+                      key={mins}
+                      type="button"
+                      className={candleDurationMins === mins ? 'preset-active' : ''}
+                      onClick={() => selectCandleMinutes(mins)}
+                    >
+                      {mins} min
+                    </button>
                   ))}
-                  {loadingAi && <div className="typing-indicator"><span /><span /><span /> <span className="typing-copy">A moment of thought…</span></div>}
-                  <div ref={chatEndRef} />
+                  <span className="candle-timer-pill">
+                    <Clock size={12} /> {formatTime(candleSecondsLeft)}
+                  </span>
                 </div>
 
-                <form className="chat-form" onSubmit={handleSendChat}>
-                  <input
-                    type="text"
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    placeholder={t.placeholder}
-                    aria-label={t.placeholder}
-                    disabled={loadingAi}
-                  />
-                  <button className="send-button" type="submit" aria-label={t.send} disabled={!chatInput.trim() || loadingAi}>
-                    <Send size={17} />
+                <div className="candle-actions">
+                  <button
+                    type="button"
+                    className={`button ${isCandleLit ? 'button-stop' : 'button-gold'}`}
+                    onClick={() => {
+                      if (!isCandleLit && candleSecondsLeft === 0) {
+                        setCandleSecondsLeft(candleDurationMins * 60);
+                      }
+                      setIsCandleLit((lit) => !lit);
+                    }}
+                  >
+                    <Flame size={16} />
+                    {isCandleLit ? t.extinguishBtn : t.relightBtn}
                   </button>
-                </form>
-                <p className="panel-footnote">A gentle companion for reflection, not a substitute for professional care.</p>
-              </section>
-            </div>
+
+                  <button
+                    type="button"
+                    className="candle-reset-btn"
+                    onClick={() => selectCandleMinutes(candleDurationMins)}
+                  >
+                    <RotateCcw size={14} /> {t.resetTimerBtn}
+                  </button>
+                </div>
+              </div>
+
+              <div className="sound-status" aria-live="polite">
+                <span className={`status-dot${isCandleLit ? ' status-active' : ''}`} />
+                {isCandleLit ? t.candleLitStatus : t.candleUnlitStatus}
+              </div>
+            </section>
           )}
 
           {activeView === 'breath' && (
